@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Invoice Generator</title>
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- html2pdf (bundled: html2canvas + jsPDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+
+  <style>
+    @media print {
+      body * { visibility: hidden; }
+      #invoice-printable, #invoice-printable * { visibility: visible; }
+      #invoice-printable { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+    .monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
+    
+    /* Better input styling */
+    input[type="text"], input[type="number"], input[type="date"] {
+      border: 1px solid #d1d5db;
+      padding: 0.5rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    /* Loading state */
+    .btn-loading {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    
+    /* Logo styles */
+    #logoPreview {
+      width: 96px;
+      height: 96px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 p-6">
+
+  <div class="max-w-6xl mx-auto">
+
+    <!-- Form -->
+    <div class="bg-white p-6 rounded shadow mb-6">
+      <h1 class="text-2xl font-semibold text-gray-800 mb-4">Invoice Generator</h1>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Invoice Date</label>
+          <input id="invoiceDate" type="date" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Invoice Number</label>
+          <input id="invoiceNumber" type="text" placeholder="INV-001" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Delivery Charges (₹)</label>
+          <input id="deliveryCharge" type="number" step="0.01" min="0" placeholder="650" value="0" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
+        </div>
+      </div>
+
+      <hr class="my-4" />
+
+      <!-- Add item form -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Item Description</label>
+          <input id="itemDesc" type="text" placeholder="500-Gm Cake" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Price (₹)</label>
+          <input id="itemPrice" type="number" step="0.01" min="0" placeholder="550" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Quantity</label>
+          <input id="itemQty" type="number" step="1" min="1" value="1" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
+        </div>
+        <div>
+          <button id="addItemBtn" class="w-full inline-flex justify-center items-center px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded shadow transition-colors">
+            <span>Add Item</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Quick add note -->
+      <!-- <p class="text-xs text-gray-500 mt-2">💡 Tip: Press Enter to quickly add items</p> -->
+    </div>
+
+    <!-- Items table -->
+    <div id="app" class="bg-white p-6 rounded shadow mb-6">
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-medium text-gray-800">Items</h2>
+        <span id="itemCount" class="text-sm text-gray-600">0 items</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table id="itemsTable" class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Item Description</th>
+              <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Price</th>
+              <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Quantity</th>
+              <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Total</th>
+              <th class="px-4 py-2 text-center text-sm font-medium text-gray-600">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTbody" class="bg-white divide-y divide-gray-100">
+            <tr id="emptyState" class="hidden">
+              <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                No items added yet. Add your first item above!
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 flex justify-end items-center space-x-6">
+        <div class="text-right">
+          <div class="text-sm text-gray-600">Subtotal</div>
+          <div id="subtotal" class="text-xl font-semibold text-gray-900 monospace">₹ 0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invoice preview (for PDF) -->
+    <div id="invoice-preview" class="bg-white p-6 rounded shadow mb-6">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start space-x-4">
+          <img id="logoPreview" src="./static/Logo.png" alt="Logo" class="rounded" />
+          <div>
+            <div class="text-xl font-bold text-gray-900">Rakhi's Homemade</div>
+            <div class="text-sm text-gray-700">Ph. 9898894005</div>
+            <div class="text-sm text-gray-800 mt-2 font-bold">
+              HDFC Bank Ltd<br>
+              A/C No - 50100709841237<br>
+              IFSC : HDFC0006453
+            </div>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <h2 class="text-3xl font-extrabold text-gray-800">Invoice</h2>
+          <div class="text-sm text-gray-700 mt-2">
+            <div>Date: <span id="invDatePreview">-</span></div>
+            <div>Invoice #: <span id="invNumberPreview">-</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <div class="text-sm text-gray-600 font-medium">Bill From</div>
+          <div class="text-gray-800 mt-1">Sindhu Seva Samaj<br>Sindhu Bhavan, Sindhubhavan Rd,<br>Ahmedabad</div>
+        </div>
+        <div>
+          <div class="text-sm text-gray-600 font-medium">Bill To</div>
+          <div class="text-gray-800 mt-1">Rakhi Panchal<br>Satyagrah Chhavni,<br>Satellite, Ahmedabad</div>
+          <div class="text-gray-800 mt-2">Ph. 9898894005</div>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <div class="overflow-x-auto">
+          <table class="w-full table-fixed border-collapse">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="text-left px-4 py-3 text-sm text-gray-600">ITEM DESCRIPTION</th>
+                <th class="text-right px-4 py-3 text-sm text-gray-600">PRICE</th>
+                <th class="text-right px-4 py-3 text-sm text-gray-600">QUANTITY</th>
+                <th class="text-right px-4 py-3 text-sm text-gray-600">TOTAL</th>
+              </tr>
+            </thead>
+            <tbody id="invoiceItemsPreview" class="bg-white divide-y divide-gray-100"></tbody>
+            <tfoot>
+              <tr id="deliveryRow" style="display: none;">
+                <td colspan="3" class="text-right px-4 py-3 font-semibold text-gray-800">Delivery Charges</td>
+                <td id="deliveryPreview" class="text-right px-4 py-3 font-semibold text-gray-800 monospace">₹ 0.00</td>
+              </tr>
+              <tr>
+                <td colspan="3" class="text-right px-4 py-3 font-semibold text-gray-800">Total Amt.</td>
+                <td id="invoiceGrandTotal" class="text-right px-4 py-3 font-semibold text-gray-800 monospace">₹ 0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="mt-8 flex justify-end border-t pt-4">
+        <div class="text-gray-700 font-medium">Thank You</div>
+      </div>
+    </div>
+
+    <div class="flex gap-3 justify-end">
+      <button id="clearBtn" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">Clear Items</button>
+      <button id="generateBtn" class="px-6 py-2 rounded bg-green-600 hover:bg-green-700 text-white transition-colors">
+        <span id="generateBtnText">Generate PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    function formatINR(value) {
+      const n = Number(value) || 0;
+      return '₹ ' + n.toFixed(2);
+    }
+
+    let items = [];
+    let idCounter = 1;
+
+    const itemDesc = document.getElementById('itemDesc');
+    const itemPrice = document.getElementById('itemPrice');
+    const itemQty = document.getElementById('itemQty');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const itemsTbody = document.getElementById('itemsTbody');
+    const subtotalEl = document.getElementById('subtotal');
+    const invoiceItemsPreview = document.getElementById('invoiceItemsPreview');
+    const invoiceGrandTotal = document.getElementById('invoiceGrandTotal');
+    const invDateInput = document.getElementById('invoiceDate');
+    const invNumberInput = document.getElementById('invoiceNumber');
+    const invDatePreview = document.getElementById('invDatePreview');
+    const invNumberPreview = document.getElementById('invNumberPreview');
+    const deliveryInput = document.getElementById('deliveryCharge');
+    const deliveryPreview = document.getElementById('deliveryPreview');
+    const deliveryRow = document.getElementById('deliveryRow');
+    const generateBtn = document.getElementById('generateBtn');
+    const generateBtnText = document.getElementById('generateBtnText');
+    const clearBtn = document.getElementById('clearBtn');
+    const emptyState = document.getElementById('emptyState');
+    const itemCount = document.getElementById('itemCount');
+
+    // Set default date to today
+    invDateInput.valueAsDate = new Date();
+    invDatePreview.textContent = invDateInput.value;
+
+    function addItem() {
+      const desc = itemDesc.value.trim();
+      const price = parseFloat(itemPrice.value);
+      const qty = parseInt(itemQty.value, 10);
+      
+      if (!desc) {
+        itemDesc.focus();
+        return alert('Item description required.');
+      }
+      if (!price || price < 0) {
+        itemPrice.focus();
+        return alert('Invalid price.');
+      }
+      if (!qty || qty < 1) {
+        itemQty.focus();
+        return alert('Invalid quantity.');
+      }
+      
+      const total = Number((price * qty).toFixed(2));
+      items.push({ id: idCounter++, desc, price, qty, total });
+      renderItems();
+      
+      // Clear form
+      itemDesc.value = '';
+      itemPrice.value = '';
+      itemQty.value = '1';
+      itemDesc.focus();
+    }
+
+    addItemBtn.addEventListener('click', addItem);
+
+    // Add keyboard shortcut (Enter) for quick adding
+    [itemDesc, itemPrice, itemQty].forEach(input => {
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addItem();
+        }
+      });
+    });
+
+    function renderItems() {
+      itemsTbody.innerHTML = '';
+      invoiceItemsPreview.innerHTML = '';
+      
+      if (items.length === 0) {
+        emptyState.style.display = 'table-row';
+        itemCount.textContent = '0 items';
+      } else {
+        emptyState.style.display = 'none';
+        itemCount.textContent = items.length + (items.length === 1 ? ' item' : ' items');
+      }
+      
+      let subtotal = 0;
+      items.forEach(it => {
+        subtotal += it.total;
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50 transition-colors';
+        tr.innerHTML = `
+          <td class="px-4 py-3 text-sm text-gray-800">${escapeHtml(it.desc)}</td>
+          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.price.toFixed(2)}</td>
+          <td class="px-4 py-3 text-sm text-gray-800 text-right">${it.qty}</td>
+          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.total.toFixed(2)}</td>
+          <td class="px-4 py-3 text-center">
+            <button data-id="${it.id}" class="edit-btn text-sm px-2 py-1 mr-2 border rounded text-blue-600 hover:bg-blue-50 transition-colors">Edit</button>
+            <button data-id="${it.id}" class="delete-btn text-sm px-2 py-1 border rounded text-red-600 hover:bg-red-50 transition-colors">Delete</button>
+          </td>`;
+        itemsTbody.appendChild(tr);
+
+        const tr2 = document.createElement('tr');
+        tr2.innerHTML = `
+          <td class="px-4 py-3 text-sm text-gray-800">${escapeHtml(it.desc)}</td>
+          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.price.toFixed(2)}</td>
+          <td class="px-4 py-3 text-sm text-gray-800 text-right">${it.qty}</td>
+          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.total.toFixed(2)}</td>`;
+        invoiceItemsPreview.appendChild(tr2);
+      });
+
+      const delivery = parseFloat(deliveryInput.value) || 0;
+      const grand = subtotal + delivery;
+      subtotalEl.textContent = formatINR(subtotal);
+      deliveryPreview.textContent = formatINR(delivery);
+      invoiceGrandTotal.textContent = formatINR(grand);
+      
+      // Show/hide delivery row if delivery charge is 0
+      deliveryRow.style.display = delivery > 0 ? 'table-row' : 'none';
+
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.onclick = function () {
+          const id = Number(this.dataset.id);
+          if (confirm('Delete this item?')) {
+            items = items.filter(i => i.id !== id);
+            renderItems();
+          }
+        };
+      });
+      
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.onclick = function () {
+          const id = Number(this.dataset.id);
+          const it = items.find(x => x.id === id);
+          if (!it) return;
+          itemDesc.value = it.desc;
+          itemPrice.value = it.price;
+          itemQty.value = it.qty;
+          items = items.filter(x => x.id !== id);
+          renderItems();
+          itemDesc.focus();
+        };
+      });
+    }
+
+    clearBtn.addEventListener('click', function () {
+      if (items.length === 0) return;
+      if (confirm('Clear all items?')) {
+        items = [];
+        renderItems();
+      }
+    });
+
+    generateBtn.addEventListener('click', async function () {
+      if (items.length === 0) {
+        return alert('Please add at least one item before generating PDF.');
+      }
+      
+      invDatePreview.textContent = invDateInput.value || '-';
+      invNumberPreview.textContent = invNumberInput.value || '-';
+      renderItems();
+      
+      // Loading state
+      generateBtn.disabled = true;
+      generateBtn.classList.add('btn-loading');
+      generateBtnText.textContent = 'Generating...';
+      
+      const invoiceElement = document.getElementById('invoice-preview');
+      const opt = {
+        margin: 10,
+        filename: `${invNumberInput.value || 'invoice'}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      
+      try {
+        await html2pdf().set(opt).from(invoiceElement).save();
+        generateBtnText.textContent = '✓ PDF Generated!';
+        setTimeout(() => {
+          generateBtnText.textContent = 'Generate PDF';
+        }, 2000);
+      } catch (err) {
+        alert('PDF generation failed. Please try again.');
+        console.error(err);
+        generateBtnText.textContent = 'Generate PDF';
+      } finally {
+        generateBtn.disabled = false;
+        generateBtn.classList.remove('btn-loading');
+      }
+    });
+
+    deliveryInput.addEventListener('input', renderItems);
+    invDateInput.addEventListener('change', () => invDatePreview.textContent = invDateInput.value || '-');
+    invNumberInput.addEventListener('input', () => invNumberPreview.textContent = invNumberInput.value || '-');
+
+    function escapeHtml(str) {
+      return str.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
+                .replaceAll('"','&quot;').replaceAll("'","&#039;");
+    }
+    
+    // Initial render
+    renderItems();
+  </script>
+</body>
+</html>
