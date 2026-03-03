@@ -3,414 +3,1277 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Invoice Generator</title>
+  <title>Invoice Generation Service | Government Digital Services Portal</title>
 
-  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            govBlue: '#003366',
+            govDarkBlue: '#002244',
+            govGold: '#B8860B',
+            govLightGold: '#DAA520',
+            govRed: '#8B0000',
+            govGray: '#f5f5f0',
+            govBorder: '#c5c5b8',
+            govText: '#1a1a1a',
+            govLink: '#004080',
+          },
+          fontFamily: {
+            serif: ['"Noto Serif"', 'Georgia', 'serif'],
+            sans: ['"Noto Sans"', 'Arial', 'Helvetica', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
 
-  <!-- html2pdf (bundled: html2canvas + jsPDF) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&family=Noto+Serif:wght@400;500;600;700&display=swap');
+
     @media print {
       body * { visibility: hidden; }
-      #invoice-printable, #invoice-printable * { visibility: visible; }
-      #invoice-printable { position: absolute; left: 0; top: 0; width: 100%; }
+      #invoice-preview, #invoice-preview * { visibility: visible; }
+      #invoice-preview { position: absolute; left: 0; top: 0; width: 100%; }
+      .no-print { display: none !important; }
     }
-    .monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
-    
-    /* Better input styling */
-    input[type="text"], input[type="number"], input[type="date"] {
-      border: 1px solid #d1d5db;
-      padding: 0.5rem;
-      transition: border-color 0.2s, box-shadow 0.2s;
+
+    * { box-sizing: border-box; }
+
+    .monospace {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
     }
-    input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
+    .gov-input {
+      border: 2px solid #6b7280;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.95rem;
+      background: #fff;
+      color: #1a1a1a;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: 'Noto Sans', Arial, sans-serif;
     }
-    
-    /* Loading state */
-    .btn-loading {
-      opacity: 0.7;
-      cursor: not-allowed;
+    .gov-input:focus {
+      outline: 3px solid #B8860B;
+      outline-offset: 0;
+      border-color: #003366;
+      box-shadow: none;
     }
-    
-    /* Logo styles */
-    #logoPreview {
-      width: 96px;
-      height: 96px;
-      object-fit: contain;
+    .gov-input::placeholder {
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    .gov-btn-primary {
+      background: #003366; color: #fff; border: 2px solid #002244;
+      font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+      font-size: 0.85rem; padding: 0.625rem 1.5rem;
+      transition: background 0.15s; cursor: pointer;
+    }
+    .gov-btn-primary:hover { background: #002244; }
+    .gov-btn-primary:focus { outline: 3px solid #B8860B; outline-offset: 2px; }
+
+    .gov-btn-success {
+      background: #006633; color: #fff; border: 2px solid #004d26;
+      font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+      font-size: 0.85rem; padding: 0.75rem 2rem;
+      transition: all 0.2s; cursor: pointer;
+    }
+    .gov-btn-success:hover { background: #004d26; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,102,51,0.3); }
+    .gov-btn-success:focus { outline: 3px solid #B8860B; outline-offset: 2px; }
+    .gov-btn-success:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .gov-btn-outline {
+      background: #fff; color: #003366; border: 2px solid #003366;
+      font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+      font-size: 0.85rem; padding: 0.625rem 1.5rem;
+      transition: background 0.15s, color 0.15s; cursor: pointer;
+    }
+    .gov-btn-outline:hover { background: #003366; color: #fff; }
+    .gov-btn-outline:focus { outline: 3px solid #B8860B; outline-offset: 2px; }
+
+    .gov-btn-danger {
+      background: #8B0000; color: #fff; border: 2px solid #660000;
+      font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
+      font-size: 0.75rem; padding: 0.375rem 0.75rem;
+      transition: background 0.15s; cursor: pointer;
+    }
+    .gov-btn-danger:hover { background: #660000; }
+
+    .skip-link {
+      position: absolute; top: -40px; left: 0; background: #003366;
+      color: #fff; padding: 8px 16px; z-index: 100; font-weight: 600;
+    }
+    .skip-link:focus { top: 0; }
+
+    .gov-section { border: 1px solid #c5c5b8; background: #fff; }
+    .gov-section-header {
+      background: linear-gradient(135deg, #003366 0%, #004080 100%);
+      color: #fff; padding: 0.75rem 1.25rem;
+      font-size: 1rem; font-weight: 700; letter-spacing: 0.03em;
+      text-transform: uppercase; border-bottom: 3px solid #B8860B;
+    }
+
+    .gov-table thead { background: #003366; }
+    .gov-table thead th {
+      color: #fff; font-weight: 600; text-transform: uppercase;
+      font-size: 0.8rem; letter-spacing: 0.04em;
+    }
+    .gov-table tbody tr:nth-child(even) { background: #f5f5f0; }
+    .gov-table tbody tr:hover { background: #e8e8d8; }
+
+    .breadcrumb a { color: #004080; text-decoration: underline; }
+    .breadcrumb a:hover { color: #002244; }
+
+    .gov-notice {
+      background: #fffbeb; border-left: 4px solid #B8860B;
+      padding: 0.75rem 1rem; font-size: 0.85rem; color: #1a1a1a;
+    }
+
+    .gov-label {
+      font-weight: 600; color: #1a1a1a; font-size: 0.875rem;
+      margin-bottom: 0.25rem; display: block;
+    }
+    .gov-label .required { color: #8B0000; font-weight: 700; }
+
+    .footer-link { color: #ccc; text-decoration: underline; font-size: 0.8rem; }
+    .footer-link:hover { color: #fff; }
+
+    .status-success {
+      background: #d1fae5; border: 2px solid #065f46; color: #065f46;
+      padding: 0.75rem 1rem; font-weight: 600; font-size: 0.875rem;
+    }
+    .status-error {
+      background: #fee2e2; border: 2px solid #991b1b; color: #991b1b;
+      padding: 0.75rem 1rem; font-weight: 600; font-size: 0.875rem;
+    }
+
+    /* Loading spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+
+    /* PDF Preview Scrollable Container */
+    .pdf-preview-container {
+      overflow: auto;
+      max-width: 100%;
+      border: 2px solid #c5c5b8;
+      border-radius: 4px;
+      background: #e5e5e5;
+    }
+
+    @media (max-width: 768px) {
+      .pdf-preview-container {
+        max-height: 600px;
+      }
+    }
+
+    @media (min-width: 769px) {
+      .pdf-preview-container {
+        max-height: 800px;
+      }
     }
   </style>
 </head>
-<body class="bg-gray-50 p-6">
+<body class="bg-govGray font-sans text-govText min-h-screen flex flex-col">
 
-  <div class="max-w-6xl mx-auto">
+  <a href="#main-content" class="skip-link">Skip to Main Content</a>
 
-    <!-- Form -->
-    <div class="bg-white p-6 rounded shadow mb-6">
-      <h1 class="text-2xl font-semibold text-gray-800 mb-4">Invoice Generator</h1>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Invoice Date</label>
-          <input id="invoiceDate" type="date" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Invoice Number</label>
-          <input id="invoiceNumber" type="text" placeholder="INV-001" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Delivery Charges (₹)</label>
-          <input id="deliveryCharge" type="number" step="0.01" min="0" placeholder="650" value="0" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
-        </div>
+  <!-- TOP BAR -->
+  <div class="bg-govDarkBlue text-white text-xs py-1">
+    <div class="max-w-7xl mx-auto px-4 flex justify-between items-center flex-wrap gap-1">
+      <div class="flex items-center gap-3">
+        <span class="text-gray-400">Screen Reader Access</span>
+        <span class="text-gray-400">|</span>
+        <button class="text-gray-300 hover:text-white text-xs" onclick="document.body.style.fontSize='14px'" aria-label="Normal text">A</button>
+        <button class="text-gray-300 hover:text-white text-sm font-bold" onclick="document.body.style.fontSize='16px'" aria-label="Large text">A+</button>
+        <button class="text-gray-300 hover:text-white text-base font-bold" onclick="document.body.style.fontSize='18px'" aria-label="Extra large text">A++</button>
       </div>
-
-      <hr class="my-4" />
-
-      <!-- Add item form -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Item Description</label>
-          <input id="itemDesc" type="text" placeholder="500-Gm Cake" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Price (₹)</label>
-          <input id="itemPrice" type="number" step="0.01" min="0" placeholder="550" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Quantity</label>
-          <input id="itemQty" type="number" step="1" min="1" value="1" class="mt-1 block w-full rounded border-gray-300 shadow-sm" />
-        </div>
-        <div>
-          <button id="addItemBtn" class="w-full inline-flex justify-center items-center px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded shadow transition-colors">
-            <span>Add Item</span>
-          </button>
-        </div>
-      </div>
-      
-      <!-- Quick add note -->
-      <p class="text-xs text-gray-500 mt-2">💡 Tip: Press Enter to quickly add items</p>
-    </div>
-
-    <!-- Items table -->
-    <div id="app" class="bg-white p-6 rounded shadow mb-6">
-      <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-medium text-gray-800">Items</h2>
-        <span id="itemCount" class="text-sm text-gray-600">0 items</span>
-      </div>
-
-      <div class="overflow-x-auto">
-        <table id="itemsTable" class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
-            <tr>
-              <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Item Description</th>
-              <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Price</th>
-              <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Quantity</th>
-              <th class="px-4 py-2 text-right text-sm font-medium text-gray-600">Total</th>
-              <th class="px-4 py-2 text-center text-sm font-medium text-gray-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="itemsTbody" class="bg-white divide-y divide-gray-100">
-            <tr id="emptyState" class="hidden">
-              <td colspan="5" class="px-4 py-8 text-center text-gray-500">
-                No items added yet. Add your first item above!
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-4 flex justify-end items-center space-x-6">
-        <div class="text-right">
-          <div class="text-sm text-gray-600">Subtotal</div>
-          <div id="subtotal" class="text-xl font-semibold text-gray-900 monospace">₹ 0.00</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Invoice preview (for PDF) -->
-    <div id="invoice-preview" class="bg-white p-6 rounded shadow mb-6">
-      <div class="flex items-start justify-between">
-        <div class="flex items-start space-x-4">
-          <img id="logoPreview" src="./static/Logo.png" alt="Logo" class="rounded" />
-          <div>
-            <div class="text-xl font-bold text-gray-900">Rakhi's Homemade</div>
-            <div class="text-sm text-gray-700">Ph. 9898894005</div>
-            <div class="text-sm text-gray-800 mt-2 font-bold">
-              HDFC Bank Ltd<br>
-              A/C No - 50100709841237<br>
-              IFSC : HDFC0006453
-            </div>
-          </div>
-        </div>
-
-        <div class="text-right">
-          <h2 class="text-3xl font-extrabold text-gray-800">Invoice</h2>
-          <div class="text-sm text-gray-700 mt-2">
-            <div>Date: <span id="invDatePreview">-</span></div>
-            <div>Invoice #: <span id="invNumberPreview">-</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <div class="text-sm text-gray-600 font-medium">Bill From</div>
-          <div class="text-gray-800 mt-1">Rakhi Panchal<br>Satyagrah Chhavni,<br>Satellite, Ahmedabad</div>
-          <div class="text-gray-800 mt-2">Ph. 9898894005</div>
-        </div>
-        <div>
-          <div class="text-sm text-gray-600 font-medium">Bill To</div>
-          <div class="text-gray-800 mt-1">Sindhu Seva Samaj<br>Sindhu Bhavan, Sindhubhavan Rd,<br>Ahmedabad</div>
-        </div>
-      </div>
-
-      <div class="mt-6">
-        <div class="overflow-x-auto">
-          <table class="w-full table-fixed border-collapse">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="text-left px-4 py-3 text-sm text-gray-600">ITEM DESCRIPTION</th>
-                <th class="text-right px-4 py-3 text-sm text-gray-600">PRICE</th>
-                <th class="text-right px-4 py-3 text-sm text-gray-600">QUANTITY</th>
-                <th class="text-right px-4 py-3 text-sm text-gray-600">TOTAL</th>
-              </tr>
-            </thead>
-            <tbody id="invoiceItemsPreview" class="bg-white divide-y divide-gray-100"></tbody>
-            <tfoot>
-              <tr id="deliveryRow" style="display: none;">
-                <td colspan="3" class="text-right px-4 py-3 font-semibold text-gray-800">Delivery Charges</td>
-                <td id="deliveryPreview" class="text-right px-4 py-3 font-semibold text-gray-800 monospace">₹ 0.00</td>
-              </tr>
-              <tr>
-                <td colspan="3" class="text-right px-4 py-3 font-semibold text-gray-800">Total Amt.</td>
-                <td id="invoiceGrandTotal" class="text-right px-4 py-3 font-semibold text-gray-800 monospace">₹ 0.00</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
-      <div class="mt-8 flex justify-end border-t pt-4">
-        <div class="text-gray-700 font-medium">Thank You</div>
-      </div>
-    </div>
-
-    <div class="flex gap-3 justify-end">
-      <button id="clearBtn" class="px-4 py-2 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors">Clear Items</button>
-      <button id="generateBtn" class="px-6 py-2 rounded bg-green-600 hover:bg-green-700 text-white transition-colors">
-        <span id="generateBtnText">Generate PDF</span>
-      </button>
     </div>
   </div>
 
+  <!-- HEADER -->
+  <header class="bg-govBlue text-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center text-govBlue font-serif text-2xl font-bold shadow">₹</div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-serif font-bold tracking-wide leading-tight">Invoice Generation Service | ઇન્વૉઇસ જનરેશન સેવા</h1>
+          <p class="text-xs sm:text-sm text-blue-200 mt-0.5">Digital Service Portal for Generating Invoice | ઇન્વૉઇસ બનાવવા માટે ડિજિટલ સેવા પોર્ટલ</p>
+        </div>
+      </div>
+      <div class="text-right hidden md:block">
+        <div class="text-xs text-blue-200">Last Updated: <span id="lastUpdated"></span></div>
+        <!-- <div class="text-xs text-blue-200">Visitors: <span class="font-mono">00,48,392</span></div> -->
+      </div>
+    </div>
+    <nav class="bg-govDarkBlue border-t border-blue-800" aria-label="Main navigation">
+    </nav>
+  </header>
+
+  <!-- MAIN -->
+  <main id="main-content" class="flex-1">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+
+      <!-- Status -->
+      <div id="statusMessage" class="mb-4 rounded hidden" role="alert" aria-live="polite"></div>
+
+      <div class="mb-6">
+        <h2 class="text-2xl font-serif font-bold text-govBlue border-b-2 border-govGold pb-2 mb-3">Fill Form Details to Generate Invoice | ઇન્વૉઇસ બનાવવા માટે ફોર્મ ભરો</h2>
+      </div>
+
+      <!-- SECTION 1 -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Section 1 — Invoice Details | વિભાગ 1 — ઇન્વૉઇસ વિગતો</div>
+        <div class="p-5">
+          <p class="text-xs text-gray-600 mb-4">Enter the basic invoice information. Fields marked with (<span class="text-red-700 font-bold">*</span>) are mandatory. | મૂળભૂત ઇન્વૉઇસ માહિતી દાખલ કરો. (<span class="text-red-700 font-bold">*</span>) ચિહ્નિત ફીલ્ડ ફરજિયાત છે.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="gov-label" for="invoiceDate">Invoice Date | ઇન્વૉઇસ તારીખ <span class="required">*</span></label>
+              <input id="invoiceDate" type="date" class="gov-input w-full rounded" required />
+              <p class="text-xs text-gray-500 mt-1">Date of invoice issuance | ઇન્વૉઇસ જારી કરવાની તારીખ</p>
+            </div>
+            <div>
+              <label class="gov-label" for="invoiceNumber">Invoice Number | ઇન્વૉઇસ નંબર <span class="required">*</span></label>
+              <input id="invoiceNumber" type="text" placeholder="e.g., INV-2025-001" class="gov-input w-full rounded" required />
+              <p class="text-xs text-gray-500 mt-1">Unique sequential invoice number | અનન્ય ક્રમિક ઇન્વૉઇસ નંબર</p>
+            </div>
+            <div>
+              <label class="gov-label" for="deliveryCharge">Delivery / Shipping Charges | ડિલિવરી ચાર્જ (₹)</label>
+              <input id="deliveryCharge" type="number" step="0.01" min="0" placeholder="0.00" value="0" class="gov-input w-full rounded" />
+              <p class="text-xs text-gray-500 mt-1">Enter 0 if not applicable | લાગુ ન હોય તો 0 દાખલ કરો</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2 -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Section 2 — Bill To (Recipient Details) | વિભાગ 2 — બિલ પ્રાપ્તકર્તા વિગતો</div>
+        <div class="p-5">
+          <p class="text-xs text-gray-600 mb-4">Provide the name, address, and contact details of the party being billed. | બિલ મેળવનાર પક્ષનું નામ, સરનામું અને સંપર્ક વિગતો આપો.</p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label class="gov-label" for="businessName">Recipient / Business Name | પ્રાપ્તકર્તા નામ <span class="required">*</span></label>
+              <input id="businessName" type="text" placeholder="Enter name or business name | નામ દાખલ કરો" class="gov-input w-full rounded" required />
+            </div>
+            <div>
+              <label class="gov-label" for="businessAddress">Address | સરનામું <span class="required">*</span></label>
+              <input id="businessAddress" type="text" placeholder="Enter complete address | સંપૂર્ણ સરનામું દાખલ કરો" class="gov-input w-full rounded" required />
+            </div>
+            <div>
+              <label class="gov-label" for="businessPhone">Phone Number | ફોન નંબર</label>
+              <input id="businessPhone" type="text" placeholder="e.g., +91 98XXX XXXXX" class="gov-input w-full rounded" />
+              <p class="text-xs text-gray-500 mt-1">Optional | વૈકલ્પિક</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3 -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Section 3 — Add Line Items | વિભાગ 3 — વસ્તુઓ ઉમેરો</div>
+        <div class="p-5">
+          <p class="text-xs text-gray-600 mb-4">
+            Add individual goods or services. Press <kbd class="bg-gray-200 px-1 rounded text-xs font-mono">Enter</kbd> to quickly add. | વ્યક્તિગત માલ અથવા સેવાઓ ઉમેરો. ઝડપથી ઉમેરવા માટે <kbd class="bg-gray-200 px-1 rounded text-xs font-mono">Enter</kbd> દબાવો.
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div>
+              <label class="gov-label" for="itemDesc">Item / Service Description | વસ્તુ વર્ણન <span class="required">*</span></label>
+              <input id="itemDesc" type="text" placeholder="e.g., 500-Gm Cake | ઉદા., 500-ગ્રામ કેક" class="gov-input w-full rounded" />
+            </div>
+            <div>
+              <label class="gov-label" for="itemPrice">Unit Price | એકમ કિંમત (₹) <span class="required">*</span></label>
+              <input id="itemPrice" type="number" step="0.01" min="0" placeholder="550" class="gov-input w-full rounded" />
+            </div>
+            <div>
+              <label class="gov-label" for="itemQty">Quantity | જથ્થો <span class="required">*</span></label>
+              <input id="itemQty" type="number" step="1" min="1" value="1" class="gov-input w-full rounded" />
+            </div>
+            <div>
+              <button id="addItemBtn" type="button" class="gov-btn-primary w-full rounded">+ Add Item | વસ્તુ ઉમેરો</button>
+            </div>
+          </div>
+          <div class="mt-3 text-xs text-gray-500 flex items-center gap-2">
+            <span class="inline-block w-4 h-4 bg-govGold rounded-full text-white text-center text-[10px] leading-4 font-bold">i</span>
+            <span>Press <strong>Enter</strong> in any field to add the item. | વસ્તુ ઉમેરવા માટે કોઈપણ ફીલ્ડમાં <strong>Enter</strong> દબાવો.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4 -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t flex justify-between items-center">
+          <span>Section 4 — Invoice Line Items | વિભાગ 4 — ઇન્વૉઇસ વસ્તુઓ</span>
+          <span id="itemCount" class="text-xs font-normal bg-white text-govBlue px-2 py-0.5 rounded">0 items</span>
+        </div>
+        <div class="p-5">
+          <p class="text-xs text-gray-600 mb-3">Review and manage items. You may edit or delete individual entries. | વસ્તુઓની સમીક્ષા કરો અને સંચાલિત કરો. તમે વ્યક્તિગત એન્ટ્રીઓને સંપાદિત અથવા કાઢી શકો છો.</p>
+          <div class="overflow-x-auto border border-govBorder rounded">
+            <table class="gov-table min-w-full">
+              <thead>
+                <tr>
+                  <th class="px-4 py-3 text-left">S.No.</th>
+                  <th class="px-4 py-3 text-left">Item / Service Description</th>
+                  <th class="px-4 py-3 text-right">Unit Price (₹)</th>
+                  <th class="px-4 py-3 text-right">Qty</th>
+                  <th class="px-4 py-3 text-right">Amount (₹)</th>
+                  <th class="px-4 py-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="itemsTbody"></tbody>
+            </table>
+          </div>
+          <div class="mt-5 flex justify-end">
+            <div class="border-2 border-govBlue rounded p-4 min-w-[220px] bg-blue-50">
+              <div class="text-xs text-gray-600 uppercase font-semibold tracking-wide">Subtotal (Before Delivery) | પેટાસરવાળો (ડિલિવરી પહેલાં)</div>
+              <div id="subtotal" class="text-2xl font-bold text-govBlue monospace mt-1">₹ 0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           SECTION 5 — GOVERNMENT-STYLE INVOICE PREVIEW
+           All inline styles for perfect PDF capture via html2canvas
+           ================================================================ -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Section 5 — Invoice Preview (PDF Output) | વિભાગ 5 — ઇન્વૉઇસ પૂર્વાવલોકન</div>
+        <div class="p-5 bg-gray-100">
+          <p class="text-xs text-gray-600 mb-4">Below is a preview of the invoice as it will appear in the generated PDF. Please verify all information before proceeding. | નીચે ઇન્વૉઇસનું પૂર્વાવલોકન છે જે જનરેટ થયેલ PDF માં દેખાશે. આગળ વધતા પહેલા કૃપા કરીને બધી માહિતી ચકાસો.</p>
+          <p class="text-xs text-blue-600 mb-3 font-semibold">📱 Scroll horizontally and vertically to view the full invoice | સંપૂર્ણ ઇન્વૉઇસ જોવા માટે આડી અને ઊભી સ્ક્રોલ કરો</p>
+
+          <div class="pdf-preview-container">
+          <div id="invoice-preview" style="
+            width: 794px;
+            margin: 0 auto;
+            background: #ffffff;
+            font-family: 'Noto Sans', Arial, Helvetica, sans-serif;
+            color: #1a1a1a;
+            line-height: 1.5;
+            position: relative;
+            overflow: hidden;
+          ">
+            <!-- ===== TOP TRICOLOR BAND ===== -->
+            <div style="display:flex; height:6px; width:100%;">
+              <div style="flex:1; background:#FF9933;"></div>
+              <div style="flex:1; background:#FFFFFF;"></div>
+              <div style="flex:1; background:#138808;"></div>
+            </div>
+
+            <!-- ===== NAVY HEADER BAR ===== -->
+            <div style="
+              background: linear-gradient(135deg, #003366 0%, #004a8f 50%, #003366 100%);
+              padding: 16px 40px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            ">
+              <div style="display:flex; align-items:center; gap:14px;">
+                <img id="logoPreview" src="./static/Logo.png" alt="Logo"
+                     crossorigin="anonymous"
+                     onerror="this.style.display='none'"
+                     style="width:64px; height:64px; object-fit:contain; border-radius:50%; border:2px solid rgba(255,255,255,0.3); background:#fff; padding:2px;" />
+                <div>
+                  <div style="font-size:22px; font-weight:800; color:#ffffff; letter-spacing:0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+                    Rakhi's Homemade
+                  </div>
+                  <div style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:2px; letter-spacing:0.3px;">
+                    Homemade Bakery and Confectionery<br>
+                  </div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="
+                  font-size:28px; font-weight:900; color:#ffffff;
+                  letter-spacing:3px; text-transform:uppercase;
+                  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                ">INVOICE</div>
+                <div style="
+                  font-size:10px; color:#DAA520; font-weight:600;
+                  letter-spacing:1.5px; text-transform:uppercase; margin-top:2px;
+                ">Tax Invoice / Bill of Supply</div>
+              </div>
+            </div>
+
+            <!-- ===== GOLD ACCENT LINE ===== -->
+            <div style="height:3px; background: linear-gradient(90deg, #B8860B, #DAA520, #B8860B);"></div>
+
+            <!-- ===== INVOICE META ROW ===== -->
+            <div style="
+              display:flex; justify-content:space-between; align-items:center;
+              padding: 12px 40px;
+              background: #f8f6f0;
+              border-bottom: 1px solid #e0ddd5;
+            ">
+              <div style="display:flex; gap:30px;">
+                <div>
+                  <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Invoice No.</div>
+                  <div id="invNumberPreview" style="font-size:15px; font-weight:700; color:#003366; font-family:monospace; margin-top:2px;">-</div>
+                </div>
+                <div>
+                  <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:1px;">Date of Issue</div>
+                  <div id="invDatePreview" style="font-size:15px; font-weight:700; color:#003366; margin-top:2px;">-</div>
+                </div>
+              </div>
+              <!-- <div style="
+                background:#003366; color:#fff;
+                padding: 5px 16px; border-radius: 3px;
+                font-size:10px; font-weight:700;
+                letter-spacing:1.5px; text-transform:uppercase;
+              ">ORIGINAL</div> -->
+            </div>
+
+            <!-- ===== MAIN CONTENT AREA ===== -->
+            <div style="padding: 28px 40px 20px 40px;">
+
+              <!-- BILL FROM / BILL TO -->
+              <div style="display:flex; gap:0; margin-bottom:28px;">
+                <!-- Bill From -->
+                <div style="
+                  flex:1;
+                  background: #f8f9fc;
+                  border: 1px solid #d0d5dd;
+                  border-right: none;
+                  border-radius: 6px 0 0 6px;
+                  padding: 18px 22px;
+                ">
+                  <div style="
+                    font-size:10px; color:#003366; font-weight:700;
+                    text-transform:uppercase; letter-spacing:1.5px;
+                    margin-bottom:10px;
+                    padding-bottom:6px;
+                    border-bottom:2px solid #B8860B;
+                    display:inline-block;
+                  ">▎ Bill From (Seller)</div>
+                  <div style="font-size:15px; font-weight:700; color:#1a1a1a; margin-top:4px;">
+                    Rakhi Panchal
+                  </div>
+                  <div style="font-size:13px; color:#555; line-height:1.7; margin-top:4px;">
+                    Satyagrah Chhavni,<br>
+                    Satellite, Ahmedabad — 380015<br>
+                    Gujarat, India
+                  </div>
+                  <div style="margin-top:10px; font-size:12px; color:#333;">
+                    <span style="color:#888; font-weight:600;">Ph:</span> 9898894005
+                  </div>
+                  <div style="
+                    margin-top:12px; padding:10px 14px;
+                    background:#fff; border:1px dashed #c0c0c0;
+                    border-radius:4px; font-size:12px; color:#333;
+                    line-height:1.7;
+                  ">
+                    <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
+                      Bank Details
+                    </div>
+                    <strong>HDFC Bank Ltd</strong><br>
+                    A/C: <span style="font-family:monospace; font-weight:600;">50100709841237</span><br>
+                    IFSC: <span style="font-family:monospace; font-weight:600;">HDFC0006453</span>
+                  </div>
+                </div>
+
+                <!-- Bill To -->
+                <div style="
+                  flex:1;
+                  background: #fffdf5;
+                  border: 1px solid #d0d5dd;
+                  border-radius: 0 6px 6px 0;
+                  padding: 18px 22px;
+                ">
+                  <div style="
+                    font-size:10px; color:#003366; font-weight:700;
+                    text-transform:uppercase; letter-spacing:1.5px;
+                    margin-bottom:10px;
+                    padding-bottom:6px;
+                    border-bottom:2px solid #B8860B;
+                    display:inline-block;
+                  ">▎ Bill To (Buyer)</div>
+                  <div id="billToPreview" style="font-size:14px; color:#333; line-height:1.7; margin-top:4px;">
+                    <span style="color:#aaa; font-style:italic;">— Not specified —</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ===== ITEMS TABLE ===== -->
+              <div style="margin-bottom:20px;">
+                <div style="
+                  font-size:10px; color:#003366; font-weight:700;
+                  text-transform:uppercase; letter-spacing:1.5px;
+                  margin-bottom:10px;
+                  padding-bottom:6px;
+                  border-bottom:2px solid #B8860B;
+                  display:inline-block;
+                ">▎ Particulars of Goods / Services</div>
+
+                <table style="
+                  width:100%;
+                  border-collapse:collapse;
+                  font-size:13px;
+                  border:1px solid #c0c0c0;
+                  margin-top:6px;
+                ">
+                  <thead>
+                    <tr>
+                      <th style="
+                        background: linear-gradient(180deg, #003366, #004080);
+                        color:#fff; font-size:10px; font-weight:700;
+                        text-transform:uppercase; letter-spacing:1px;
+                        padding:10px 14px; text-align:center;
+                        border:1px solid #002244; width:44px;
+                      ">S.No</th>
+                      <th style="
+                        background: linear-gradient(180deg, #003366, #004080);
+                        color:#fff; font-size:10px; font-weight:700;
+                        text-transform:uppercase; letter-spacing:1px;
+                        padding:10px 14px; text-align:left;
+                        border:1px solid #002244;
+                      ">Item / Service Description</th>
+                      <th style="
+                        background: linear-gradient(180deg, #003366, #004080);
+                        color:#fff; font-size:10px; font-weight:700;
+                        text-transform:uppercase; letter-spacing:1px;
+                        padding:10px 14px; text-align:right;
+                        border:1px solid #002244; width:100px;
+                      ">Rate (₹)</th>
+                      <th style="
+                        background: linear-gradient(180deg, #003366, #004080);
+                        color:#fff; font-size:10px; font-weight:700;
+                        text-transform:uppercase; letter-spacing:1px;
+                        padding:10px 14px; text-align:center;
+                        border:1px solid #002244; width:60px;
+                      ">Qty</th>
+                      <th style="
+                        background: linear-gradient(180deg, #003366, #004080);
+                        color:#fff; font-size:10px; font-weight:700;
+                        text-transform:uppercase; letter-spacing:1px;
+                        padding:10px 14px; text-align:right;
+                        border:1px solid #002244; width:110px;
+                      ">Amount (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="invoiceItemsPreview">
+                    <!-- Items injected by JS -->
+                  </tbody>
+                  <tfoot>
+                    <!-- Subtotal Row -->
+                    <tr>
+                      <td colspan="4" style="
+                        text-align:right; padding:10px 14px;
+                        font-weight:600; color:#555;
+                        font-size:12px; text-transform:uppercase;
+                        letter-spacing:0.5px;
+                        border:1px solid #c0c0c0;
+                        background:#fafaf5;
+                      ">Subtotal</td>
+                      <td id="invoiceSubtotalPreview" style="
+                        text-align:right; padding:10px 14px;
+                        font-weight:700; color:#333;
+                        font-family:monospace; font-size:13px;
+                        border:1px solid #c0c0c0;
+                        background:#fafaf5;
+                      ">₹ 0.00</td>
+                    </tr>
+                    <!-- Delivery Row (hidden by default) -->
+                    <tr id="deliveryRow" style="display:none;">
+                      <td colspan="4" style="
+                        text-align:right; padding:10px 14px;
+                        font-weight:600; color:#555;
+                        font-size:12px; text-transform:uppercase;
+                        letter-spacing:0.5px;
+                        border:1px solid #c0c0c0;
+                        background:#fafaf5;
+                      ">Delivery / Shipping Charges</td>
+                      <td id="deliveryPreview" style="
+                        text-align:right; padding:10px 14px;
+                        font-weight:700; color:#333;
+                        font-family:monospace; font-size:13px;
+                        border:1px solid #c0c0c0;
+                        background:#fafaf5;
+                      ">₹ 0.00</td>
+                    </tr>
+                    <!-- Grand Total Row -->
+                    <tr>
+                      <td colspan="4" style="
+                        text-align:right; padding:12px 14px;
+                        font-weight:800; color:#003366;
+                        font-size:14px; text-transform:uppercase;
+                        letter-spacing:1px;
+                        border:2px solid #003366;
+                        background:#e8edf5;
+                      ">Grand Total</td>
+                      <td id="invoiceGrandTotal" style="
+                        text-align:right; padding:12px 14px;
+                        font-weight:900; color:#003366;
+                        font-family:monospace; font-size:16px;
+                        border:2px solid #003366;
+                        background:#e8edf5;
+                      ">₹ 0.00</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <!-- ===== AMOUNT IN WORDS ===== -->
+              <div style="
+                background:#f0f4f8;
+                border:1px solid #c0c8d8;
+                border-radius:4px;
+                padding:12px 18px;
+                margin-bottom:24px;
+                display:flex; align-items:center; gap:10px;
+              ">
+                <div style="font-size:10px; color:#003366; font-weight:700; text-transform:uppercase; letter-spacing:1px; white-space:nowrap;">
+                  Amount in Words:
+                </div>
+                <div id="amountInWords" style="
+                  font-size:13px; font-weight:600; color:#1a1a1a;
+                  font-style:italic;
+                ">Zero Rupees Only</div>
+              </div>
+
+              <!-- ===== TERMS & SIGNATURE ===== -->
+              <div style="display:flex; gap:0; margin-bottom:0;">
+                <!-- Terms -->
+                <div style="
+                  flex:1.3;
+                  border:1px solid #d0d5dd;
+                  border-right:none;
+                  border-radius:6px 0 0 6px;
+                  padding:16px 20px;
+                  background:#fafaf8;
+                ">
+                  <div style="
+                    font-size:10px; color:#003366; font-weight:700;
+                    text-transform:uppercase; letter-spacing:1px;
+                    margin-bottom:8px;
+                    padding-bottom:4px;
+                    border-bottom:1px solid #ddd;
+                  ">Terms & Conditions</div>
+                  <ol style="
+                    font-size:10px; color:#666; line-height:1.8;
+                    margin:0; padding-left:14px;
+                  ">
+                    <li>Payment is due upon receipt of this invoice.</li>
+                    <li>Please make payment via bank transfer to the account details mentioned above.</li>
+                    <!-- <li>All disputes are subject to Ahmedabad jurisdiction.</li>
+                    <li>Goods once sold will not be taken back or exchanged.</li> -->
+                  </ol>
+                </div>
+                <!-- Signature -->
+                <!-- <div style="
+                  flex:0.7;
+                  border:1px solid #d0d5dd;
+                  border-radius: 0 6px 6px 0;
+                  padding:16px 20px;
+                  display:flex; flex-direction:column;
+                  justify-content:space-between;
+                  align-items:center;
+                  text-align:center;
+                  background:#fff;
+                ">
+                  <div style="
+                    font-size:10px; color:#003366; font-weight:700;
+                    text-transform:uppercase; letter-spacing:1px;
+                    width:100%; text-align:center;
+                    padding-bottom:4px;
+                    border-bottom:1px solid #ddd;
+                  ">For Rakhi's Homemade</div>
+                  <div style="
+                    margin-top:30px;
+                    width:140px;
+                    border-bottom:1px solid #333;
+                    padding-bottom:2px;
+                  "></div>
+                  <div style="font-size:10px; color:#888; margin-top:4px;">Authorized Signatory</div>
+                </div> -->
+              </div>
+            </div>
+
+            <!-- ===== FOOTER BAR ===== -->
+            <div style="
+              margin-top:20px;
+              background:#f0f0ea;
+              border-top:1px solid #d0d0c8;
+              padding:10px 40px;
+              text-align:center;
+            ">
+              <div style="font-size:10px; color:#888; letter-spacing:0.3px;">
+                This is a computer-generated invoice and does not require a physical signature.
+              </div>
+              <div style="font-size:9px; color:#aaa; margin-top:3px;">
+                Rakhi's Homemade • Satyagrah Chhavni, Satellite, Ahmedabad — 380015
+              </div>
+            </div>
+
+            <!-- ===== BOTTOM GOLD + TRICOLOR BAND ===== -->
+            <!-- <div style="height:3px; background: linear-gradient(90deg, #B8860B, #DAA520, #B8860B);"></div>
+            <div style="display:flex; height:5px; width:100%;">
+              <div style="flex:1; background:#FF9933;"></div>
+              <div style="flex:1; background:#FFFFFF; border-top:1px solid #eee;"></div>
+              <div style="flex:1; background:#138808;"></div>
+            </div> -->
+
+            <!-- ===== WATERMARK OVERLAY ===== -->
+            <div style="
+              position:absolute;
+              top:50%; left:50%;
+              transform: translate(-50%, -50%) rotate(-35deg);
+              font-size:90px;
+              font-weight:900;
+              color: rgba(0,51,102,0.03);
+              letter-spacing:15px;
+              text-transform:uppercase;
+              pointer-events:none;
+              white-space:nowrap;
+              z-index:0;
+            ">INVOICE</div>
+
+          </div><!-- end #invoice-preview -->
+          </div><!-- end .pdf-preview-container -->
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Actions | ક્રિયાઓ</div>
+        <div class="p-5">
+          <p class="text-xs text-gray-600 mb-4">Use the buttons below to clear all entered items or generate the final invoice document in PDF format. | બધી દાખલ કરેલી વસ્તુઓને સાફ કરવા અથવા PDF ફોર્મેટમાં અંતિમ ઇન્વૉઇસ દસ્તાવેજ બનાવવા માટે નીચેના બટનોનો ઉપયોગ કરો.</p>
+          <div class="flex gap-4 flex-wrap items-center">
+            <button id="clearBtn" type="button" class="gov-btn-outline rounded">✕ Clear All Items | બધું સાફ કરો</button>
+            <button id="generateBtn" type="button" class="gov-btn-success rounded flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span id="generateBtnText">Generate PDF Document | PDF બનાવો</span>
+            </button>
+            <!-- <button id="printBtn" type="button" class="gov-btn-outline rounded flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+              </svg>
+              Print Invoice
+            </button> -->
+          </div>
+        </div>
+      </div>
+
+      <!-- GUIDELINES -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Guidelines &amp; Instructions | માર્ગદર્શિકા અને સૂચનાઓ</div>
+        <div class="p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-bold text-sm text-govBlue mb-2">How to Use This Service | આ સેવાનો ઉપયોગ કેવી રીતે કરવો</h3>
+              <ol class="text-sm text-gray-700 list-decimal list-inside space-y-1.5 leading-relaxed">
+                <li>Fill in the <strong>Invoice Date</strong> and <strong>Invoice Number</strong> in Section 1. | વિભાગ 1 માં <strong>ઇન્વૉઇસ તારીખ</strong> અને <strong>ઇન્વૉઇસ નંબર</strong> ભરો.</li>
+                <li>Enter the <strong>recipient details</strong> (name, address) in Section 2. | વિભાગ 2 માં <strong>પ્રાપ્તકર્તા વિગતો</strong> (નામ, સરનામું) દાખલ કરો.</li>
+                <li>Add individual <strong>line items</strong> using Section 3. | વિભાગ 3 નો ઉપયોગ કરીને વ્યક્તિગત <strong>વસ્તુઓ</strong> ઉમેરો.</li>
+                <li>Review all items in <strong>Section 4</strong> — edit or delete entries. | <strong>વિભાગ 4</strong> માં બધી વસ્તુઓની સમીક્ષા કરો — એન્ટ્રીઓને સંપાદિત અથવા કાઢી નાખો.</li>
+                <li>Verify the <strong>invoice preview</strong> in Section 5. | વિભાગ 5 માં <strong>ઇન્વૉઇસ પૂર્વાવલોકન</strong> ચકાસો.</li>
+                <li>Click <strong>"Generate PDF Document"</strong> to download. | ડાઉનલોડ કરવા માટે <strong>"PDF બનાવો"</strong> પર ક્લિક કરો.</li>
+              </ol>
+            </div>
+            <div>
+              <!-- <h3 class="font-bold text-sm text-govBlue mb-2">Regulatory Information</h3>
+              <ul class="text-sm text-gray-700 list-disc list-inside space-y-1.5 leading-relaxed">
+                <li>All invoices must carry a unique sequential invoice number.</li>
+                <li>Invoice date must not be a future date.</li>
+                <li>Delivery charges, if applicable, must be declared separately.</li>
+                <li>Generated invoices should be retained for a minimum period of <strong>6 years</strong>.</li>
+                <li>For discrepancies, file a grievance via the <a href="#" class="text-govLink underline">Online Grievance Portal</a>.</li>
+              </ul> -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-govDarkBlue text-white mt-auto">
+    <div class="max-w-7xl mx-auto px-4 py-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+        <div>
+          <h4 class="font-bold text-govLightGold uppercase text-xs tracking-wider mb-3">About This Portal</h4>
+          <p class="text-gray-400 text-xs leading-relaxed">This Invoice Generation Service is part of the Government Digital Services initiative aimed at providing accessible, efficient, and transparent public services through technology.</p>
+        </div>
+        <div>
+        </div>
+        <div>
+          <h4 class="font-bold text-govLightGold uppercase text-xs tracking-wider mb-3">Contact Information</h4>
+          <p class="text-gray-400 text-xs leading-relaxed">https://github.com/Mihir2811</p>
+
+        </div>
+      </div>
+      <hr class="border-blue-800 my-5" />
+      <div class="flex flex-col md:flex-row justify-between items-center gap-3 text-xs text-gray-500">
+        <div>Content owned and maintained by <strong class="text-gray-300">Rakhi's Homemade</strong>.</div>
+        <div>Designed &amp; Developed by Mihir Panchal</div>
+      </div>
+      <div class="text-center text-xs text-gray-600 mt-3">© <span id="copyrightYear"></span> Rakhi's Homemade. All rights reserved.</div>
+    </div>
+  </footer>
+
+
+  <!-- ==============================================================
+       JAVASCRIPT — Full application logic + robust PDF generation
+       ============================================================== -->
   <script>
-    function formatINR(value) {
-      const n = Number(value) || 0;
-      return '₹ ' + n.toFixed(2);
+  (function () {
+    'use strict';
+
+    // ────────────────────────────────────────────────────────────
+    // UTILITIES
+    // ────────────────────────────────────────────────────────────
+    function escapeHtml(str) {
+      var d = document.createElement('div');
+      d.appendChild(document.createTextNode(str));
+      return d.innerHTML;
     }
 
-    let items = [];
-    let idCounter = 1;
+    function formatINR(v) {
+      var n = Number(v) || 0;
+      return '\u20B9 ' + n.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
 
-    const itemDesc = document.getElementById('itemDesc');
-    const itemPrice = document.getElementById('itemPrice');
-    const itemQty = document.getElementById('itemQty');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const itemsTbody = document.getElementById('itemsTbody');
-    const subtotalEl = document.getElementById('subtotal');
-    const invoiceItemsPreview = document.getElementById('invoiceItemsPreview');
-    const invoiceGrandTotal = document.getElementById('invoiceGrandTotal');
-    const invDateInput = document.getElementById('invoiceDate');
-    const invNumberInput = document.getElementById('invoiceNumber');
-    const invDatePreview = document.getElementById('invDatePreview');
-    const invNumberPreview = document.getElementById('invNumberPreview');
-    const deliveryInput = document.getElementById('deliveryCharge');
-    const deliveryPreview = document.getElementById('deliveryPreview');
-    const deliveryRow = document.getElementById('deliveryRow');
-    const generateBtn = document.getElementById('generateBtn');
-    const generateBtnText = document.getElementById('generateBtnText');
-    const clearBtn = document.getElementById('clearBtn');
-    const emptyState = document.getElementById('emptyState');
-    const itemCount = document.getElementById('itemCount');
+    // Number-to-words converter (Indian system)
+    function numberToWords(num) {
+      if (num === 0) return 'Zero';
+      var ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+                  'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
+                  'Seventeen','Eighteen','Nineteen'];
+      var tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
 
-    // Set default date to today
-    invDateInput.valueAsDate = new Date();
+      function twoDigits(n) {
+        if (n < 20) return ones[n];
+        return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+      }
+      function threeDigits(n) {
+        if (n >= 100) {
+          return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' and ' + twoDigits(n % 100) : '');
+        }
+        return twoDigits(n);
+      }
+
+      var result = '';
+      var crore = Math.floor(num / 10000000);
+      num %= 10000000;
+      var lakh = Math.floor(num / 100000);
+      num %= 100000;
+      var thousand = Math.floor(num / 1000);
+      num %= 1000;
+      var remainder = Math.floor(num);
+
+      if (crore) result += threeDigits(crore) + ' Crore ';
+      if (lakh) result += twoDigits(lakh) + ' Lakh ';
+      if (thousand) result += twoDigits(thousand) + ' Thousand ';
+      if (remainder) result += threeDigits(remainder);
+
+      return result.trim();
+    }
+
+    function amountToWords(amount) {
+      var rupees = Math.floor(amount);
+      var paise  = Math.round((amount - rupees) * 100);
+      var words  = numberToWords(rupees) + ' Rupees';
+      if (paise > 0) words += ' and ' + numberToWords(paise) + ' Paise';
+      return words + ' Only';
+    }
+
+    // ────────────────────────────────────────────────────────────
+    // DOM REFERENCES
+    // ────────────────────────────────────────────────────────────
+    var invDateInput       = document.getElementById('invoiceDate');
+    var invNumberInput     = document.getElementById('invoiceNumber');
+    var deliveryInput      = document.getElementById('deliveryCharge');
+    var businessNameInput  = document.getElementById('businessName');
+    var businessAddrInput  = document.getElementById('businessAddress');
+    var businessPhoneInput = document.getElementById('businessPhone');
+    var itemDescInput      = document.getElementById('itemDesc');
+    var itemPriceInput     = document.getElementById('itemPrice');
+    var itemQtyInput       = document.getElementById('itemQty');
+
+    var addItemBtn         = document.getElementById('addItemBtn');
+    var clearBtn           = document.getElementById('clearBtn');
+    var generateBtn        = document.getElementById('generateBtn');
+    var generateBtnText    = document.getElementById('generateBtnText');
+
+    var itemsTbody         = document.getElementById('itemsTbody');
+    var subtotalEl         = document.getElementById('subtotal');
+    var itemCountEl        = document.getElementById('itemCount');
+    var statusEl           = document.getElementById('statusMessage');
+
+    var invDatePreview     = document.getElementById('invDatePreview');
+    var invNumberPreview   = document.getElementById('invNumberPreview');
+    var billToPreview      = document.getElementById('billToPreview');
+    var invoiceItemsPrev   = document.getElementById('invoiceItemsPreview');
+    var deliveryPreview    = document.getElementById('deliveryPreview');
+    var deliveryRow        = document.getElementById('deliveryRow');
+    var invoiceGrandTotal  = document.getElementById('invoiceGrandTotal');
+    var invoiceSubtotalPrev= document.getElementById('invoiceSubtotalPreview');
+    var amountInWordsEl    = document.getElementById('amountInWords');
+
+    // ────────────────────────────────────────────────────────────
+    // INIT DATES
+    // ────────────────────────────────────────────────────────────
+    var today = new Date();
+    var dateStr = today.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    document.getElementById('lastUpdated').textContent  = dateStr;
+    document.getElementById('copyrightYear').textContent = today.getFullYear();
+    invDateInput.valueAsDate = today;
     invDatePreview.textContent = invDateInput.value;
 
+    // ────────────────────────────────────────────────────────────
+    // STATE
+    // ────────────────────────────────────────────────────────────
+    var items = [];
+    var idCounter = 1;
+
+    // ────────────────────────────────────────────────────────────
+    // STATUS MESSAGES
+    // ────────────────────────────────────────────────────────────
+    function showStatus(msg, type) {
+      statusEl.className = 'mb-4 rounded ' + (type === 'success' ? 'status-success' : 'status-error');
+      statusEl.textContent = msg;
+      statusEl.classList.remove('hidden');
+      statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (type === 'success') setTimeout(function () { statusEl.classList.add('hidden'); }, 5000);
+    }
+    function hideStatus() { statusEl.classList.add('hidden'); }
+
+    // ────────────────────────────────────────────────────────────
+    // ADD ITEM
+    // ────────────────────────────────────────────────────────────
     function addItem() {
-      const desc = itemDesc.value.trim();
-      const price = parseFloat(itemPrice.value);
-      const qty = parseInt(itemQty.value, 10);
-      
-      if (!desc) {
-        itemDesc.focus();
-        return alert('Item description required.');
-      }
-      if (!price || price < 0) {
-        itemPrice.focus();
-        return alert('Invalid price.');
-      }
-      if (!qty || qty < 1) {
-        itemQty.focus();
-        return alert('Invalid quantity.');
-      }
-      
-      const total = Number((price * qty).toFixed(2));
-      items.push({ id: idCounter++, desc, price, qty, total });
+      hideStatus();
+      var desc  = itemDescInput.value.trim();
+      var price = parseFloat(itemPriceInput.value);
+      var qty   = parseInt(itemQtyInput.value, 10);
+
+      if (!desc) { itemDescInput.focus(); return showStatus('Validation Error: Item description is mandatory.', 'error'); }
+      if (isNaN(price) || price < 0) { itemPriceInput.focus(); return showStatus('Validation Error: Enter a valid unit price.', 'error'); }
+      if (isNaN(qty) || qty < 1) { itemQtyInput.focus(); return showStatus('Validation Error: Quantity must be at least 1.', 'error'); }
+
+      items.push({ id: idCounter++, desc: desc, price: price, qty: qty, total: Math.round(price * qty * 100) / 100 });
       renderItems();
-      
-      // Clear form
-      itemDesc.value = '';
-      itemPrice.value = '';
-      itemQty.value = '1';
-      itemDesc.focus();
+      itemDescInput.value = '';
+      itemPriceInput.value = '';
+      itemQtyInput.value = '1';
+      itemDescInput.focus();
     }
 
     addItemBtn.addEventListener('click', addItem);
-
-    // Add keyboard shortcut (Enter) for quick adding
-    [itemDesc, itemPrice, itemQty].forEach(input => {
-      input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          addItem();
-        }
-      });
+    [itemDescInput, itemPriceInput, itemQtyInput].forEach(function (el) {
+      el.addEventListener('keypress', function (e) { if (e.key === 'Enter') { e.preventDefault(); addItem(); } });
     });
 
+    // ────────────────────────────────────────────────────────────
+    // RENDER ITEMS (Management Table + Invoice Preview)
+    // ────────────────────────────────────────────────────────────
     function renderItems() {
       itemsTbody.innerHTML = '';
-      invoiceItemsPreview.innerHTML = '';
-      
+      invoiceItemsPrev.innerHTML = '';
+
       if (items.length === 0) {
-        emptyState.style.display = 'table-row';
-        itemCount.textContent = '0 items';
+        var emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = '<td colspan="6" style="padding:40px 16px;text-align:center;color:#999;font-style:italic;">' +
+          '<div style="font-size:36px;margin-bottom:8px;">📋</div>No items have been added yet.<br>' +
+          '<span style="font-size:12px;">Use Section 3 above to add goods or services.</span></td>';
+        itemsTbody.appendChild(emptyRow);
+
+        // Empty preview row
+        var emptyPrev = document.createElement('tr');
+        emptyPrev.innerHTML = '<td colspan="5" style="padding:30px 14px;text-align:center;color:#bbb;font-style:italic;font-size:12px;border:1px solid #c0c0c0;">No items added</td>';
+        invoiceItemsPrev.appendChild(emptyPrev);
+
+        itemCountEl.textContent = '0 items';
       } else {
-        emptyState.style.display = 'none';
-        itemCount.textContent = items.length + (items.length === 1 ? ' item' : ' items');
+        itemCountEl.textContent = items.length + (items.length === 1 ? ' item' : ' items');
       }
-      
-      let subtotal = 0;
-      items.forEach(it => {
+
+      var subtotal = 0;
+
+      items.forEach(function (it, idx) {
         subtotal += it.total;
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50 transition-colors';
-        tr.innerHTML = `
-          <td class="px-4 py-3 text-sm text-gray-800">${escapeHtml(it.desc)}</td>
-          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.price.toFixed(2)}</td>
-          <td class="px-4 py-3 text-sm text-gray-800 text-right">${it.qty}</td>
-          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.total.toFixed(2)}</td>
-          <td class="px-4 py-3 text-center">
-            <button data-id="${it.id}" class="edit-btn text-sm px-2 py-1 mr-2 border rounded text-blue-600 hover:bg-blue-50 transition-colors">Edit</button>
-            <button data-id="${it.id}" class="delete-btn text-sm px-2 py-1 border rounded text-red-600 hover:bg-red-50 transition-colors">Delete</button>
-          </td>`;
+
+        // ── Management table row ──
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td class="px-4 py-3 text-sm text-gray-800 font-mono">' + (idx + 1) + '.</td>' +
+          '<td class="px-4 py-3 text-sm text-gray-800 font-semibold">' + escapeHtml(it.desc) + '</td>' +
+          '<td class="px-4 py-3 text-sm text-gray-800 text-right monospace">\u20B9 ' + it.price.toFixed(2) + '</td>' +
+          '<td class="px-4 py-3 text-sm text-gray-800 text-right">' + it.qty + '</td>' +
+          '<td class="px-4 py-3 text-sm text-gray-800 text-right monospace font-semibold">\u20B9 ' + it.total.toFixed(2) + '</td>' +
+          '<td class="px-4 py-3 text-center">' +
+            '<button data-id="' + it.id + '" class="edit-btn text-xs px-3 py-1 mr-1 border-2 border-govBlue rounded text-govBlue hover:bg-govBlue hover:text-white transition-colors font-semibold uppercase cursor-pointer">Edit</button>' +
+            '<button data-id="' + it.id + '" class="delete-btn gov-btn-danger rounded">Delete</button>' +
+          '</td>';
         itemsTbody.appendChild(tr);
 
-        const tr2 = document.createElement('tr');
-        tr2.innerHTML = `
-          <td class="px-4 py-3 text-sm text-gray-800">${escapeHtml(it.desc)}</td>
-          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.price.toFixed(2)}</td>
-          <td class="px-4 py-3 text-sm text-gray-800 text-right">${it.qty}</td>
-          <td class="px-4 py-3 text-sm text-gray-800 text-right monospace">₹ ${it.total.toFixed(2)}</td>`;
-        invoiceItemsPreview.appendChild(tr2);
+        // ── Invoice preview row (fully inline styled) ──
+        var bgColor = (idx % 2 === 0) ? '#ffffff' : '#f8f8f5';
+        var tr2 = document.createElement('tr');
+        tr2.innerHTML =
+          '<td style="padding:10px 14px;font-size:12px;color:#555;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:600;">' + (idx + 1) + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#222;text-align:left;border:1px solid #c0c0c0;background:' + bgColor + ';font-weight:500;">' + escapeHtml(it.desc) + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#333;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;">' + it.price.toFixed(2) + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#333;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';">' + it.qty + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#1a1a1a;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:700;">' + it.total.toFixed(2) + '</td>';
+        invoiceItemsPrev.appendChild(tr2);
       });
 
-      const delivery = parseFloat(deliveryInput.value) || 0;
-      const grand = subtotal + delivery;
-      subtotalEl.textContent = formatINR(subtotal);
-      deliveryPreview.textContent = formatINR(delivery);
-      invoiceGrandTotal.textContent = formatINR(grand);
-      
-      // Show/hide delivery row if delivery charge is 0
-      deliveryRow.style.display = delivery > 0 ? 'table-row' : 'none';
+      // ── Totals ──
+      var delivery = parseFloat(deliveryInput.value) || 0;
+      var grand    = subtotal + delivery;
 
-      document.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.onclick = function () {
-          const id = Number(this.dataset.id);
+      subtotalEl.textContent = formatINR(subtotal);
+      invoiceSubtotalPrev.textContent = formatINR(subtotal);
+      deliveryPreview.textContent     = formatINR(delivery);
+      invoiceGrandTotal.textContent   = formatINR(grand);
+      deliveryRow.style.display       = delivery > 0 ? 'table-row' : 'none';
+      amountInWordsEl.textContent     = amountToWords(grand);
+
+      // ── Bind actions ──
+      bindItemActions();
+    }
+
+    function bindItemActions() {
+      document.querySelectorAll('.delete-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = Number(this.getAttribute('data-id'));
           if (confirm('Delete this item?')) {
-            items = items.filter(i => i.id !== id);
+            items = items.filter(function (i) { return i.id !== id; });
             renderItems();
           }
-        };
+        });
       });
-      
-      document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.onclick = function () {
-          const id = Number(this.dataset.id);
-          const it = items.find(x => x.id === id);
-          if (!it) return;
-          itemDesc.value = it.desc;
-          itemPrice.value = it.price;
-          itemQty.value = it.qty;
-          items = items.filter(x => x.id !== id);
+      document.querySelectorAll('.edit-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var id = Number(this.getAttribute('data-id'));
+          var found = null;
+          for (var i = 0; i < items.length; i++) {
+            if (items[i].id === id) { found = items[i]; break; }
+          }
+          if (!found) return;
+          itemDescInput.value  = found.desc;
+          itemPriceInput.value = found.price;
+          itemQtyInput.value   = found.qty;
+          items = items.filter(function (x) { return x.id !== id; });
           renderItems();
-          itemDesc.focus();
-        };
+          itemDescInput.focus();
+          itemDescInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
       });
     }
 
+    // ────────────────────────────────────────────────────────────
+    // CLEAR
+    // ────────────────────────────────────────────────────────────
     clearBtn.addEventListener('click', function () {
       if (items.length === 0) return;
-      if (confirm('Clear all items?')) {
+      if (confirm('Clear all items? This cannot be undone.')) {
         items = [];
         renderItems();
+        hideStatus();
       }
     });
 
-    generateBtn.addEventListener('click', async function () {
-      if (items.length === 0) {
-        return alert('Please add at least one item before generating PDF.');
-      }
-      
+    // ────────────────────────────────────────────────────────────
+    // LIVE PREVIEW UPDATES
+    // ────────────────────────────────────────────────────────────
+    invDateInput.addEventListener('change', function () {
       invDatePreview.textContent = invDateInput.value || '-';
-      invNumberPreview.textContent = invNumberInput.value || '-';
+    });
+    invNumberInput.addEventListener('input', function () {
+      invNumberPreview.textContent = invNumberInput.value.trim() || '-';
+    });
+    deliveryInput.addEventListener('input', renderItems);
+
+    function updateBillToPreview() {
+      var name    = businessNameInput.value.trim();
+      var address = businessAddrInput.value.trim();
+      var phone   = businessPhoneInput.value.trim();
+
+      if (!name && !address && !phone) {
+        billToPreview.innerHTML = '<span style="color:#aaa;font-style:italic;">— Not specified —</span>';
+        return;
+      }
+
+      var html = '';
+      if (name) html += '<div style="font-size:15px;font-weight:700;color:#1a1a1a;">' + escapeHtml(name) + '</div>';
+      if (address) html += '<div style="font-size:13px;color:#555;line-height:1.7;margin-top:4px;">' + escapeHtml(address) + '</div>';
+      if (phone) html += '<div style="margin-top:8px;font-size:12px;color:#333;"><span style="color:#888;font-weight:600;">Ph:</span> ' + escapeHtml(phone) + '</div>';
+      billToPreview.innerHTML = html;
+    }
+
+    businessNameInput.addEventListener('input', updateBillToPreview);
+    businessAddrInput.addEventListener('input', updateBillToPreview);
+    businessPhoneInput.addEventListener('input', updateBillToPreview);
+
+    // ────────────────────────────────────────────────────────────
+    // PDF GENERATION — html2canvas + jsPDF
+    // ────────────────────────────────────────────────────────────
+    generateBtn.addEventListener('click', function () {
+      hideStatus();
+
+      // Validation
+      if (!invDateInput.value) {
+        invDateInput.focus();
+        return showStatus('Validation Error: Invoice Date is mandatory.', 'error');
+      }
+      if (!invNumberInput.value.trim()) {
+        invNumberInput.focus();
+        return showStatus('Validation Error: Invoice Number is mandatory.', 'error');
+      }
+      if (!businessNameInput.value.trim()) {
+        businessNameInput.focus();
+        return showStatus('Validation Error: Recipient name is mandatory.', 'error');
+      }
+      if (!businessAddrInput.value.trim()) {
+        businessAddrInput.focus();
+        return showStatus('Validation Error: Recipient address is mandatory.', 'error');
+      }
+      if (items.length === 0) {
+        return showStatus('Validation Error: At least one line item is required.', 'error');
+      }
+
+      // Sync preview
+      invDatePreview.textContent   = invDateInput.value || '-';
+      invNumberPreview.textContent = invNumberInput.value.trim() || '-';
+      updateBillToPreview();
       renderItems();
-      
+
       // Loading state
       generateBtn.disabled = true;
-      generateBtn.classList.add('btn-loading');
-      generateBtnText.textContent = 'Generating...';
-      
-      const invoiceElement = document.getElementById('invoice-preview');
-      const opt = {
-        margin: 10,
-        filename: `${invNumberInput.value || 'invoice'}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
-      
-      try {
-        await html2pdf().set(opt).from(invoiceElement).save();
-        generateBtnText.textContent = '✓ PDF Generated!';
-        setTimeout(() => {
-          generateBtnText.textContent = 'Generate PDF';
-        }, 2000);
-      } catch (err) {
-        alert('PDF generation failed. Please try again.');
-        console.error(err);
-        generateBtnText.textContent = 'Generate PDF';
-      } finally {
-        generateBtn.disabled = false;
-        generateBtn.classList.remove('btn-loading');
-      }
+      generateBtnText.innerHTML = '<span class="spinner"></span> Processing…';
+
+      var invoiceEl = document.getElementById('invoice-preview');
+      var fileName  = (invNumberInput.value.trim() || 'invoice') + '.pdf';
+
+      // Wait for DOM to repaint
+      requestAnimationFrame(function () {
+        setTimeout(function () {
+          captureAndDownloadPDF(invoiceEl, fileName);
+        }, 400);
+      });
     });
 
-    deliveryInput.addEventListener('input', renderItems);
-    invDateInput.addEventListener('change', () => invDatePreview.textContent = invDateInput.value || '-');
-    invNumberInput.addEventListener('input', () => invNumberPreview.textContent = invNumberInput.value || '-');
+    function captureAndDownloadPDF(element, fileName) {
+      // Store original styles
+      var origOverflow = element.style.overflow;
+      element.style.overflow = 'visible';
 
-    function escapeHtml(str) {
-      return str.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
-                .replaceAll('"','&quot;').replaceAll("'","&#039;");
+      html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        width: element.scrollWidth,
+        height: element.scrollHeight,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      }).then(function (canvas) {
+
+        // Restore styles
+        element.style.overflow = origOverflow;
+
+        try {
+          var jsPDF = window.jspdf.jsPDF;
+          var imgData = canvas.toDataURL('image/png', 1.0);
+
+          // A4 in mm
+          var pageW = 210;
+          var pageH = 297;
+          var margin = 8;
+          var contentW = pageW - (margin * 2);
+          var contentH = (canvas.height * contentW) / canvas.width;
+          var availableH = pageH - (margin * 2);
+
+          var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+          if (contentH <= availableH) {
+            // ── Single page ──
+            pdf.addImage(imgData, 'PNG', margin, margin, contentW, contentH);
+          } else {
+            // ── Multi-page ──
+            var pages = Math.ceil(contentH / availableH);
+            var sliceH = canvas.height / pages;
+
+            for (var p = 0; p < pages; p++) {
+              if (p > 0) pdf.addPage();
+
+              var srcY = p * sliceH;
+              var srcH = Math.min(sliceH, canvas.height - srcY);
+
+              var pageCanvas = document.createElement('canvas');
+              pageCanvas.width  = canvas.width;
+              pageCanvas.height = Math.ceil(srcH);
+
+              var ctx = pageCanvas.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+              ctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+
+              var pageImg = pageCanvas.toDataURL('image/png', 1.0);
+              var drawH = (srcH * contentW) / canvas.width;
+
+              pdf.addImage(pageImg, 'PNG', margin, margin, contentW, drawH);
+            }
+          }
+
+          pdf.save(fileName);
+
+          showStatus(
+            '\u2713 PDF Document generated successfully! Invoice #: ' +
+            (invNumberInput.value.trim() || 'N/A') +
+            ' — File: ' + fileName,
+            'success'
+          );
+          generateBtnText.textContent = '\u2713 Downloaded!';
+          setTimeout(function () {
+            generateBtnText.textContent = 'Generate PDF Document | PDF બનાવો';
+          }, 3000);
+
+        } catch (err) {
+          console.error('jsPDF Error:', err);
+          showStatus('PDF creation failed: ' + (err.message || 'Unknown error'), 'error');
+          generateBtnText.textContent = 'Generate PDF Document | PDF બનાવો';
+        }
+
+        generateBtn.disabled = false;
+
+      }).catch(function (err) {
+        element.style.overflow = origOverflow;
+        console.error('html2canvas Error:', err);
+        showStatus('Failed to capture invoice: ' + (err.message || 'Unknown error') + '. Try Ctrl+P.', 'error');
+        generateBtnText.textContent = 'Generate PDF Document | PDF બનાવો';
+        generateBtn.disabled = false;
+      });
     }
-    
-    // Initial render
+
+    // ────────────────────────────────────────────────────────────
+    // INITIALIZE
+    // ────────────────────────────────────────────────────────────
     renderItems();
+
+  })();
   </script>
 </body>
 </html>
