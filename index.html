@@ -32,6 +32,7 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800;900&family=Noto+Serif:wght@400;500;600;700&display=swap');
@@ -232,6 +233,36 @@
         <h2 class="text-2xl font-serif font-bold text-govBlue border-b-2 border-govGold pb-2 mb-3">Fill Form Details to Generate Invoice | ઇન્વૉઇસ બનાવવા માટે ફોર્મ ભરો</h2>
       </div>
 
+        <!-- GUIDELINES -->
+      <div class="gov-section rounded mb-6">
+        <div class="gov-section-header rounded-t">Guidelines &amp; Instructions | માર્ગદર્શિકા અને સૂચનાઓ</div>
+        <div class="p-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 class="font-bold text-sm text-govBlue mb-2">How to Use This Service | આ સેવાનો ઉપયોગ કેવી રીતે કરવો</h3>
+              <ol class="text-sm text-gray-700 list-decimal list-inside space-y-1.5 leading-relaxed">
+                <li>Fill in the <strong>Invoice Date</strong> and <strong>Invoice Number</strong> in Section 1. | વિભાગ 1 માં <strong>ઇન્વૉઇસ તારીખ</strong> અને <strong>ઇન્વૉઇસ નંબર</strong> ભરો.</li>
+                <li>Enter the <strong>recipient details</strong> (name, address) in Section 2. | વિભાગ 2 માં <strong>પ્રાપ્તકર્તા વિગતો</strong> (નામ, સરનામું) દાખલ કરો.</li>
+                <li>Add individual <strong>line items</strong> using Section 3. | વિભાગ 3 નો ઉપયોગ કરીને વ્યક્તિગત <strong>વસ્તુઓ</strong> ઉમેરો.</li>
+                <li>Review all items in <strong>Section 4</strong> — edit or delete entries. | <strong>વિભાગ 4</strong> માં બધી વસ્તુઓની સમીક્ષા કરો — એન્ટ્રીઓને સંપાદિત અથવા કાઢી નાખો.</li>
+                <li>Verify the <strong>invoice preview</strong> in Section 5. | વિભાગ 5 માં <strong>ઇન્વૉઇસ પૂર્વાવલોકન</strong> ચકાસો.</li>
+                <li>Click <strong>"Generate PDF Document"</strong> to download. | ડાઉનલોડ કરવા માટે <strong>"PDF બનાવો"</strong> પર ક્લિક કરો.</li>
+              </ol>
+            </div>
+            <div>
+              <!-- <h3 class="font-bold text-sm text-govBlue mb-2">Regulatory Information</h3>
+              <ul class="text-sm text-gray-700 list-disc list-inside space-y-1.5 leading-relaxed">
+                <li>All invoices must carry a unique sequential invoice number.</li>
+                <li>Invoice date must not be a future date.</li>
+                <li>Delivery charges, if applicable, must be declared separately.</li>
+                <li>Generated invoices should be retained for a minimum period of <strong>6 years</strong>.</li>
+                <li>For discrepancies, file a grievance via the <a href="#" class="text-govLink underline">Online Grievance Portal</a>.</li>
+              </ul> -->
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- SECTION 1 -->
       <div class="gov-section rounded mb-6">
         <div class="gov-section-header rounded-t">Section 1 — Invoice Details | વિભાગ 1 — ઇન્વૉઇસ વિગતો</div>
@@ -245,8 +276,8 @@
             </div>
             <div>
               <label class="gov-label" for="invoiceNumber">Invoice Number | ઇન્વૉઇસ નંબર <span class="required">*</span></label>
-              <input id="invoiceNumber" type="text" placeholder="e.g., INV-2025-001" class="gov-input w-full rounded" required />
-              <p class="text-xs text-gray-500 mt-1">Unique sequential invoice number | અનન્ય ક્રમિક ઇન્વૉઇસ નંબર</p>
+              <input id="invoiceNumber" type="text" placeholder="e.g., 2026/001" class="gov-input w-full rounded" required />
+              <p class="text-xs text-gray-500 mt-1">Unique sequential invoice number | દરેક બિલ માટે 2026/01 (January) અને 2026/02 (February) મુજબ 7 અક્ષરનો ક્રમબદ્ધ નંબર આપવો. મહિના દર્શાવવા માટે January માટે 01 થી December માટે 12 સુધીના બે અંકોનો ઉપયોગ કરવો.</p>
             </div>
             <div>
               <label class="gov-label" for="deliveryCharge">Delivery / Shipping Charges | ડિલિવરી ચાર્જ (₹)</label>
@@ -467,18 +498,29 @@
                   <div style="margin-top:10px; font-size:12px; color:#333;">
                     <span style="color:#888; font-weight:600;">Ph:</span> 9898894005
                   </div>
-                  <div style="
-                    margin-top:12px; padding:10px 14px;
-                    background:#fff; border:1px dashed #c0c0c0;
-                    border-radius:4px; font-size:12px; color:#333;
-                    line-height:1.7;
-                  ">
-                    <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
-                      Bank Details
+                  <div style="display:flex; gap:10px; margin-top:12px;">
+                    <div style="
+                      flex:1;
+                      padding:10px 14px;
+                      background:#fff; border:1px dashed #c0c0c0;
+                      border-radius:4px; font-size:12px; color:#333;
+                      line-height:1.7;
+                    ">
+                      <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
+                        Bank Details
+                      </div>
+                      <strong>HDFC Bank Ltd</strong><br>
+                      A/C: <span style="font-family:monospace; font-weight:600;">50100709841237</span><br>
+                      IFSC: <span style="font-family:monospace; font-weight:600;">HDFC0006453</span>
                     </div>
-                    <strong>HDFC Bank Ltd</strong><br>
-                    A/C: <span style="font-family:monospace; font-weight:600;">50100709841237</span><br>
-                    IFSC: <span style="font-family:monospace; font-weight:600;">HDFC0006453</span>
+                    <div id="qrCodeContainer" style="
+                      display:flex; flex-direction:column; align-items:center;
+                      padding:8px; background:#fff; border:1px dashed #c0c0c0;
+                      border-radius:4px;
+                    ">
+                      <div style="font-size:9px; color:#888; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Scan to Pay</div>
+                      <img id="upiQRCode" style="width:80px; height:80px;" alt="UPI QR Code" />
+                    </div>
                   </div>
                 </div>
 
@@ -664,7 +706,7 @@
                     margin:0; padding-left:14px;
                   ">
                     <li>Payment is due upon receipt of this invoice.</li>
-                    <li>Please make payment via bank transfer to the account details mentioned above.</li>
+                    <li>Please make payment via bank transfer to the account details mentioned above or via UPI by scanning the QR code.</li>
                     <!-- <li>All disputes are subject to Ahmedabad jurisdiction.</li>
                     <li>Goods once sold will not be taken back or exchanged.</li> -->
                   </ol>
@@ -767,36 +809,6 @@
           </div>
         </div>
       </div>
-
-      <!-- GUIDELINES -->
-      <div class="gov-section rounded mb-6">
-        <div class="gov-section-header rounded-t">Guidelines &amp; Instructions | માર્ગદર્શિકા અને સૂચનાઓ</div>
-        <div class="p-5">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 class="font-bold text-sm text-govBlue mb-2">How to Use This Service | આ સેવાનો ઉપયોગ કેવી રીતે કરવો</h3>
-              <ol class="text-sm text-gray-700 list-decimal list-inside space-y-1.5 leading-relaxed">
-                <li>Fill in the <strong>Invoice Date</strong> and <strong>Invoice Number</strong> in Section 1. | વિભાગ 1 માં <strong>ઇન્વૉઇસ તારીખ</strong> અને <strong>ઇન્વૉઇસ નંબર</strong> ભરો.</li>
-                <li>Enter the <strong>recipient details</strong> (name, address) in Section 2. | વિભાગ 2 માં <strong>પ્રાપ્તકર્તા વિગતો</strong> (નામ, સરનામું) દાખલ કરો.</li>
-                <li>Add individual <strong>line items</strong> using Section 3. | વિભાગ 3 નો ઉપયોગ કરીને વ્યક્તિગત <strong>વસ્તુઓ</strong> ઉમેરો.</li>
-                <li>Review all items in <strong>Section 4</strong> — edit or delete entries. | <strong>વિભાગ 4</strong> માં બધી વસ્તુઓની સમીક્ષા કરો — એન્ટ્રીઓને સંપાદિત અથવા કાઢી નાખો.</li>
-                <li>Verify the <strong>invoice preview</strong> in Section 5. | વિભાગ 5 માં <strong>ઇન્વૉઇસ પૂર્વાવલોકન</strong> ચકાસો.</li>
-                <li>Click <strong>"Generate PDF Document"</strong> to download. | ડાઉનલોડ કરવા માટે <strong>"PDF બનાવો"</strong> પર ક્લિક કરો.</li>
-              </ol>
-            </div>
-            <div>
-              <!-- <h3 class="font-bold text-sm text-govBlue mb-2">Regulatory Information</h3>
-              <ul class="text-sm text-gray-700 list-disc list-inside space-y-1.5 leading-relaxed">
-                <li>All invoices must carry a unique sequential invoice number.</li>
-                <li>Invoice date must not be a future date.</li>
-                <li>Delivery charges, if applicable, must be declared separately.</li>
-                <li>Generated invoices should be retained for a minimum period of <strong>6 years</strong>.</li>
-                <li>For discrepancies, file a grievance via the <a href="#" class="text-govLink underline">Online Grievance Portal</a>.</li>
-              </ul> -->
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </main>
 
@@ -892,6 +904,18 @@
       var words  = numberToWords(rupees) + ' Rupees';
       if (paise > 0) words += ' and ' + numberToWords(paise) + ' Paise';
       return words + ' Only';
+    }
+
+    function generateUPIQRCode(amount) {
+      var upiId = 'rakhipanchal3874@okicici';
+      var name = 'Rakhi Panchal';
+      var upiString = 'upi://pay?pa=' + upiId + '&pn=' + encodeURIComponent(name) + '&am=' + amount.toFixed(2) + '&cu=INR';
+      
+      var qrImg = document.getElementById('upiQRCode');
+      if (!qrImg) return;
+      
+      // Use QR Server API as fallback
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=' + encodeURIComponent(upiString);
     }
 
     // ────────────────────────────────────────────────────────────
@@ -1046,6 +1070,7 @@
       invoiceGrandTotal.textContent   = formatINR(grand);
       deliveryRow.style.display       = delivery > 0 ? 'table-row' : 'none';
       amountInWordsEl.textContent     = amountToWords(grand);
+      generateUPIQRCode(grand);
 
       // ── Bind actions ──
       bindItemActions();
@@ -1272,6 +1297,7 @@
     // INITIALIZE
     // ────────────────────────────────────────────────────────────
     renderItems();
+    generateUPIQRCode(0);
 
   })();
   </script>
