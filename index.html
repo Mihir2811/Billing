@@ -185,8 +185,150 @@
       }
     }
   </style>
+
+  <!-- ═══════════════════════════════════════════════
+       LOGIN GATE — minimal CSS
+  ═══════════════════════════════════════════════ -->
+  <style>
+    #login-cover {
+      position: fixed;
+      inset: 0;
+      background: #f5f5f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #login-box {
+      background: #fff;
+      border: 1px solid #c5c5b8;
+      padding: 36px 40px;
+      width: 100%;
+      max-width: 360px;
+      font-family: 'Noto Sans', Arial, sans-serif;
+    }
+    #login-box h2 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      font-weight: 700;
+      color: #003366;
+    }
+    #login-box p {
+      margin: 0 0 22px;
+      font-size: 12px;
+      color: #888;
+    }
+    #login-box label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+    #login-box input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #aaa;
+      padding: 9px 10px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+    #login-box input:focus { border-color: #003366; }
+    #login-btn {
+      width: 100%;
+      background: #003366;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      font-family: inherit;
+    }
+    #login-btn:hover { background: #002244; }
+    #login-error {
+      display: none;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #8B0000;
+      text-align: center;
+    }
+    #login-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 24px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid #B8860B;
+    }
+    #login-logo span {
+      width: 36px;
+      height: 36px;
+      background: #003366;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    #login-logo strong {
+      font-size: 14px;
+      color: #003366;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+    #login-logo small {
+      display: block;
+      font-size: 10px;
+      color: #888;
+      font-weight: 400;
+    }
+  </style>
 </head>
 <body class="bg-govGray font-sans text-govText min-h-screen flex flex-col">
+
+  <!-- ═══════════════════════════════════════════════
+       LOGIN COVER — blocks all site content
+  ═══════════════════════════════════════════════ -->
+  <div id="login-cover">
+    <div id="login-box">
+
+      <!-- Branding -->
+      <div id="login-logo">
+        <span>₹</span>
+        <div>
+          <strong>Rakhi's Homemade</strong>
+          <small>Invoice Generation Portal</small>
+        </div>
+      </div>
+
+      <h2>Sign In</h2>
+      <p>Enter your credentials to access the portal.</p>
+
+      <label for="lg-email">Email Address</label>
+      <input id="lg-email" type="email" placeholder="you@example.com" autocomplete="username" />
+
+      <label for="lg-password">Password</label>
+      <input id="lg-password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+      <button id="login-btn" type="button">LOGIN</button>
+
+      <!-- Error shown on bad credentials -->
+      <div id="login-error">Invalid email or password.</div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       SITE CONTENT — hidden until login succeeds
+  ═══════════════════════════════════════════════ -->
+  <div id="site-content" style="display:none; contents;">
 
   <a href="#main-content" class="skip-link">Skip to Main Content</a>
 
@@ -405,7 +547,7 @@
             <!-- ===== NAVY HEADER BAR ===== -->
             <div style="
               background: linear-gradient(135deg, #003366 0%, #004a8f 50%, #003366 100%);
-              padding: 13px 40px;
+              padding: 16px 40px;
               display: flex;
               justify-content: space-between;
               align-items: center;
@@ -414,13 +556,13 @@
                 <img id="logoPreview" src="./static/Logo.png" alt="Logo"
                      crossorigin="anonymous"
                      onerror="this.style.display='none'"
-                     style="width:58px; height:58px; object-fit:contain; border-radius:50%; border:2px solid rgba(255,255,255,0.3); background:#fff; padding:2px;" />
+                     style="width:64px; height:64px; object-fit:contain; border-radius:50%; border:2px solid rgba(255,255,255,0.3); background:#fff; padding:2px;" />
                 <div>
-                  <div style="font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+                  <div style="font-size:22px; font-weight:800; color:#ffffff; letter-spacing:0.5px; text-shadow:0 1px 2px rgba(0,0,0,0.2);">
                     Rakhi's Homemade
                   </div>
                   <div style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:2px; letter-spacing:0.3px;">
-                    Homemade Bakery and Confectionery
+                    Homemade Bakery and Confectionery<br>
                   </div>
                 </div>
               </div>
@@ -443,7 +585,7 @@
             <!-- ===== INVOICE META ROW ===== -->
             <div style="
               display:flex; justify-content:space-between; align-items:center;
-              padding: 9px 40px;
+              padding: 12px 40px;
               background: #f8f6f0;
               border-bottom: 1px solid #e0ddd5;
             ">
@@ -466,10 +608,10 @@
             </div>
 
             <!-- ===== MAIN CONTENT AREA ===== -->
-            <div style="padding: 20px 40px 14px 40px;">
+            <div style="padding: 28px 40px 20px 40px;">
 
               <!-- BILL FROM / BILL TO -->
-              <div style="display:flex; gap:0; margin-bottom:18px;">
+              <div style="display:flex; gap:0; margin-bottom:28px;">
                 <!-- Bill From -->
                 <div style="
                   flex:1;
@@ -477,34 +619,34 @@
                   border: 1px solid #d0d5dd;
                   border-right: none;
                   border-radius: 6px 0 0 6px;
-                  padding: 14px 18px;
+                  padding: 18px 22px;
                 ">
                   <div style="
                     font-size:10px; color:#003366; font-weight:700;
                     text-transform:uppercase; letter-spacing:1.5px;
-                    margin-bottom:8px;
-                    padding-bottom:5px;
+                    margin-bottom:10px;
+                    padding-bottom:6px;
                     border-bottom:2px solid #B8860B;
                     display:inline-block;
                   ">▎ Bill From (Seller)</div>
-                  <div style="font-size:14px; font-weight:700; color:#1a1a1a; margin-top:3px;">
+                  <div style="font-size:15px; font-weight:700; color:#1a1a1a; margin-top:4px;">
                     Rakhi Panchal
                   </div>
-                  <div style="font-size:12px; color:#555; line-height:1.6; margin-top:3px;">
+                  <div style="font-size:13px; color:#555; line-height:1.7; margin-top:4px;">
                     Satyagrah Chhavni,<br>
                     Satellite, Ahmedabad — 380015<br>
                     Gujarat, India
                   </div>
-                  <div style="margin-top:7px; font-size:12px; color:#333;">
+                  <div style="margin-top:10px; font-size:12px; color:#333;">
                     <span style="color:#888; font-weight:600;">Ph:</span> 9898894005
                   </div>
-                  <div style="display:flex; gap:10px; margin-top:10px;">
+                  <div style="display:flex; gap:10px; margin-top:12px;">
                     <div style="
                       flex:1;
-                      padding:8px 12px;
+                      padding:10px 14px;
                       background:#fff; border:1px dashed #c0c0c0;
                       border-radius:4px; font-size:12px; color:#333;
-                      line-height:1.6;
+                      line-height:1.7;
                     ">
                       <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
                         Bank Details
@@ -515,11 +657,11 @@
                     </div>
                     <div id="qrCodeContainer" style="
                       display:flex; flex-direction:column; align-items:center;
-                      padding:7px; background:#fff; border:1px dashed #c0c0c0;
+                      padding:8px; background:#fff; border:1px dashed #c0c0c0;
                       border-radius:4px;
                     ">
                       <div style="font-size:9px; color:#888; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Scan to Pay</div>
-                      <img id="upiQRCode" style="width:72px; height:72px;" alt="UPI QR Code" />
+                      <img id="upiQRCode" style="width:80px; height:80px;" alt="UPI QR Code" />
                     </div>
                   </div>
                 </div>
@@ -530,29 +672,29 @@
                   background: #fffdf5;
                   border: 1px solid #d0d5dd;
                   border-radius: 0 6px 6px 0;
-                  padding: 14px 18px;
+                  padding: 18px 22px;
                 ">
                   <div style="
                     font-size:10px; color:#003366; font-weight:700;
                     text-transform:uppercase; letter-spacing:1.5px;
-                    margin-bottom:8px;
-                    padding-bottom:5px;
+                    margin-bottom:10px;
+                    padding-bottom:6px;
                     border-bottom:2px solid #B8860B;
                     display:inline-block;
                   ">▎ Bill To (Buyer)</div>
-                  <div id="billToPreview" style="font-size:13px; color:#333; line-height:1.6; margin-top:3px;">
+                  <div id="billToPreview" style="font-size:14px; color:#333; line-height:1.7; margin-top:4px;">
                     <span style="color:#aaa; font-style:italic;">— Not specified —</span>
                   </div>
                 </div>
               </div>
 
               <!-- ===== ITEMS TABLE ===== -->
-              <div style="margin-bottom:14px;">
+              <div style="margin-bottom:20px;">
                 <div style="
                   font-size:10px; color:#003366; font-weight:700;
                   text-transform:uppercase; letter-spacing:1.5px;
-                  margin-bottom:8px;
-                  padding-bottom:5px;
+                  margin-bottom:10px;
+                  padding-bottom:6px;
                   border-bottom:2px solid #B8860B;
                   display:inline-block;
                 ">▎ Particulars of Goods / Services</div>
@@ -562,7 +704,7 @@
                   border-collapse:collapse;
                   font-size:13px;
                   border:1px solid #c0c0c0;
-                  margin-top:5px;
+                  margin-top:6px;
                 ">
                   <thead>
                     <tr>
@@ -570,35 +712,35 @@
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:8px 14px; text-align:center;
+                        padding:10px 14px; text-align:center;
                         border:1px solid #002244; width:44px;
                       ">S.No</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:8px 14px; text-align:left;
+                        padding:10px 14px; text-align:left;
                         border:1px solid #002244;
                       ">Item / Service Description</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:8px 14px; text-align:right;
+                        padding:10px 14px; text-align:right;
                         border:1px solid #002244; width:100px;
                       ">Rate (₹)</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:8px 14px; text-align:center;
+                        padding:10px 14px; text-align:center;
                         border:1px solid #002244; width:60px;
                       ">Qty</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:8px 14px; text-align:right;
+                        padding:10px 14px; text-align:right;
                         border:1px solid #002244; width:110px;
                       ">Amount (₹)</th>
                     </tr>
@@ -610,7 +752,7 @@
                     <!-- Subtotal Row -->
                     <tr>
                       <td colspan="4" style="
-                        text-align:right; padding:8px 14px;
+                        text-align:right; padding:10px 14px;
                         font-weight:600; color:#555;
                         font-size:12px; text-transform:uppercase;
                         letter-spacing:0.5px;
@@ -618,7 +760,7 @@
                         background:#fafaf5;
                       ">Subtotal</td>
                       <td id="invoiceSubtotalPreview" style="
-                        text-align:right; padding:8px 14px;
+                        text-align:right; padding:10px 14px;
                         font-weight:700; color:#333;
                         font-family:monospace; font-size:13px;
                         border:1px solid #c0c0c0;
@@ -628,7 +770,7 @@
                     <!-- Delivery Row (hidden by default) -->
                     <tr id="deliveryRow" style="display:none;">
                       <td colspan="4" style="
-                        text-align:right; padding:8px 14px;
+                        text-align:right; padding:10px 14px;
                         font-weight:600; color:#555;
                         font-size:12px; text-transform:uppercase;
                         letter-spacing:0.5px;
@@ -636,7 +778,7 @@
                         background:#fafaf5;
                       ">Delivery / Shipping Charges</td>
                       <td id="deliveryPreview" style="
-                        text-align:right; padding:8px 14px;
+                        text-align:right; padding:10px 14px;
                         font-weight:700; color:#333;
                         font-family:monospace; font-size:13px;
                         border:1px solid #c0c0c0;
@@ -646,7 +788,7 @@
                     <!-- Grand Total Row -->
                     <tr>
                       <td colspan="4" style="
-                        text-align:right; padding:10px 14px;
+                        text-align:right; padding:12px 14px;
                         font-weight:800; color:#003366;
                         font-size:14px; text-transform:uppercase;
                         letter-spacing:1px;
@@ -654,7 +796,7 @@
                         background:#e8edf5;
                       ">Grand Total</td>
                       <td id="invoiceGrandTotal" style="
-                        text-align:right; padding:10px 14px;
+                        text-align:right; padding:12px 14px;
                         font-weight:900; color:#003366;
                         font-family:monospace; font-size:16px;
                         border:2px solid #003366;
@@ -670,8 +812,8 @@
                 background:#f0f4f8;
                 border:1px solid #c0c8d8;
                 border-radius:4px;
-                padding:9px 18px;
-                margin-bottom:14px;
+                padding:12px 18px;
+                margin-bottom:24px;
                 display:flex; align-items:center; gap:10px;
               ">
                 <div style="font-size:10px; color:#003366; font-weight:700; text-transform:uppercase; letter-spacing:1px; white-space:nowrap;">
@@ -691,18 +833,18 @@
                   border:1px solid #d0d5dd;
                   border-right:none;
                   border-radius:6px 0 0 6px;
-                  padding:12px 16px;
+                  padding:16px 20px;
                   background:#fafaf8;
                 ">
                   <div style="
                     font-size:10px; color:#003366; font-weight:700;
                     text-transform:uppercase; letter-spacing:1px;
-                    margin-bottom:6px;
+                    margin-bottom:8px;
                     padding-bottom:4px;
                     border-bottom:1px solid #ddd;
                   ">Terms & Conditions</div>
                   <ol style="
-                    font-size:10px; color:#666; line-height:1.7;
+                    font-size:10px; color:#666; line-height:1.8;
                     margin:0; padding-left:14px;
                   ">
                     <li>Payment is due upon receipt of this invoice.</li>
@@ -743,10 +885,10 @@
 
             <!-- ===== FOOTER BAR ===== -->
             <div style="
-              margin-top:14px;
+              margin-top:20px;
               background:#f0f0ea;
               border-top:1px solid #d0d0c8;
-              padding:8px 40px;
+              padding:10px 40px;
               text-align:center;
             ">
               <div style="font-size:10px; color:#888; letter-spacing:0.3px;">
@@ -1052,11 +1194,11 @@
         var bgColor = (idx % 2 === 0) ? '#ffffff' : '#f8f8f5';
         var tr2 = document.createElement('tr');
         tr2.innerHTML =
-          '<td style="padding:8px 14px;font-size:12px;color:#555;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:600;">' + (idx + 1) + '</td>' +
-          '<td style="padding:8px 14px;font-size:13px;color:#222;text-align:left;border:1px solid #c0c0c0;background:' + bgColor + ';font-weight:500;">' + escapeHtml(it.desc) + '</td>' +
-          '<td style="padding:8px 14px;font-size:13px;color:#333;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;">' + it.price.toFixed(2) + '</td>' +
-          '<td style="padding:8px 14px;font-size:13px;color:#333;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';">' + it.qty + '</td>' +
-          '<td style="padding:8px 14px;font-size:13px;color:#1a1a1a;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:700;">' + it.total.toFixed(2) + '</td>';
+          '<td style="padding:10px 14px;font-size:12px;color:#555;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:600;">' + (idx + 1) + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#222;text-align:left;border:1px solid #c0c0c0;background:' + bgColor + ';font-weight:500;">' + escapeHtml(it.desc) + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#333;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;">' + it.price.toFixed(2) + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#333;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';">' + it.qty + '</td>' +
+          '<td style="padding:10px 14px;font-size:13px;color:#1a1a1a;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:700;">' + it.total.toFixed(2) + '</td>';
         invoiceItemsPrev.appendChild(tr2);
       });
 
@@ -1301,5 +1443,99 @@
 
   })();
   </script>
+  </div><!-- end #site-content -->
+
+  <!-- ═══════════════════════════════════════════════
+       LOGIN GATE — JavaScript
+       • SHA-256 hashing via Web Crypto API
+       • Credential verification
+       • Session persistence via localStorage
+  ═══════════════════════════════════════════════ -->
+  <script>
+  (function () {
+
+    // ── Stored credentials ──────────────────────────────────────────
+    // Email stored directly (not sensitive).
+    // Password stored ONLY as its SHA-256 hash — never in plain text.
+    var STORED_EMAIL    = 'rakhipanchal3874@gmail.com';
+    var STORED_PWD_HASH = 'be57f37c3284ae3914f83c0127a870eeb4be0100381d1e2508de61776fcd914b';
+    var SESSION_KEY     = 'rh_auth_ok'; // localStorage flag key
+
+    // ── DOM references ───────────────────────────────────────────────
+    var cover    = document.getElementById('login-cover');
+    var content  = document.getElementById('site-content');
+    var btnLogin = document.getElementById('login-btn');
+    var emailIn  = document.getElementById('lg-email');
+    var pwdIn    = document.getElementById('lg-password');
+    var errMsg   = document.getElementById('login-error');
+
+    // ── Session check ────────────────────────────────────────────────
+    // If the user already logged in during this browser session,
+    // skip the login screen entirely and show the site.
+    if (localStorage.getItem(SESSION_KEY) === '1') {
+      grantAccess();
+      return; // nothing more to do
+    }
+
+    // ── SHA-256 helper ───────────────────────────────────────────────
+    // Uses the browser's built-in Web Crypto API — no libraries needed.
+    function sha256(str) {
+      var buf = new TextEncoder().encode(str);
+      return crypto.subtle.digest('SHA-256', buf).then(function (hashBuf) {
+        // Convert ArrayBuffer → lowercase hex string
+        return Array.from(new Uint8Array(hashBuf))
+          .map(function (b) { return b.toString(16).padStart(2, '0'); })
+          .join('');
+      });
+    }
+
+    // ── Login handler ────────────────────────────────────────────────
+    function attemptLogin() {
+      var email = emailIn.value.trim().toLowerCase();
+      var pwd   = pwdIn.value;
+
+      errMsg.style.display = 'none'; // clear any previous error
+
+      // Basic empty-field guard
+      if (!email || !pwd) {
+        showError();
+        return;
+      }
+
+      // Hash the entered password, then compare both values
+      sha256(pwd).then(function (hash) {
+        if (email === STORED_EMAIL && hash === STORED_PWD_HASH) {
+          // ✓ Credentials match — store session flag and reveal site
+          localStorage.setItem(SESSION_KEY, '1');
+          grantAccess();
+        } else {
+          // ✗ Wrong email or password
+          showError();
+        }
+      });
+    }
+
+    // ── Helpers ──────────────────────────────────────────────────────
+    function grantAccess() {
+      cover.style.display   = 'none';   // hide login cover
+      content.style.display = '';       // reveal site (removes inline display:none)
+    }
+
+    function showError() {
+      errMsg.style.display = 'block';
+      pwdIn.value = '';
+      pwdIn.focus();
+    }
+
+    // ── Event listeners ──────────────────────────────────────────────
+    btnLogin.addEventListener('click', attemptLogin);
+
+    // Allow pressing Enter in either field to submit
+    emailIn.addEventListener('keydown', function (e) { if (e.key === 'Enter') attemptLogin(); });
+    pwdIn.addEventListener('keydown',   function (e) { if (e.key === 'Enter') attemptLogin(); });
+
+  })();
+  </script>
+
 </body>
 </html>
