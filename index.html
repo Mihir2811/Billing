@@ -418,8 +418,8 @@
             </div>
             <div>
               <label class="gov-label" for="invoiceNumber">Invoice Number | ઇન્વૉઇસ નંબર <span class="required">*</span></label>
-              <input id="invoiceNumber" type="text" placeholder="e.g., 2026/001" class="gov-input w-full rounded" required />
-              <p class="text-xs text-gray-500 mt-1">Unique sequential invoice number | દરેક બિલ માટે 2026/01 (January) અને 2026/02 (February) મુજબ 7 અક્ષરનો ક્રમબદ્ધ નંબર આપવો. મહિના દર્શાવવા માટે January માટે 01 થી December માટે 12 સુધીના બે અંકોનો ઉપયોગ કરવો.</p>
+              <input id="invoiceNumber" type="month" class="gov-input w-full rounded" required />
+              <p class="text-xs text-gray-500 mt-1">Select year &amp; month — generates e.g. <strong>2026/03</strong> | વર્ષ અને મહિનો પસંદ કરો</p>
             </div>
             <div>
               <label class="gov-label" for="deliveryCharge">Delivery / Shipping Charges | ડિલિવરી ચાર્જ (₹)</label>
@@ -547,7 +547,7 @@
             <!-- ===== NAVY HEADER BAR ===== -->
             <div style="
               background: linear-gradient(135deg, #003366 0%, #004a8f 50%, #003366 100%);
-              padding: 16px 40px;
+              padding: 10px 40px;
               display: flex;
               justify-content: space-between;
               align-items: center;
@@ -585,7 +585,7 @@
             <!-- ===== INVOICE META ROW ===== -->
             <div style="
               display:flex; justify-content:space-between; align-items:center;
-              padding: 12px 40px;
+              padding: 8px 40px;
               background: #f8f6f0;
               border-bottom: 1px solid #e0ddd5;
             ">
@@ -608,10 +608,10 @@
             </div>
 
             <!-- ===== MAIN CONTENT AREA ===== -->
-            <div style="padding: 28px 40px 20px 40px;">
+            <div style="padding: 16px 40px 12px 40px;">
 
               <!-- BILL FROM / BILL TO -->
-              <div style="display:flex; gap:0; margin-bottom:28px;">
+              <div style="display:flex; gap:0; margin-bottom:16px;">
                 <!-- Bill From -->
                 <div style="
                   flex:1;
@@ -619,34 +619,34 @@
                   border: 1px solid #d0d5dd;
                   border-right: none;
                   border-radius: 6px 0 0 6px;
-                  padding: 18px 22px;
+                  padding: 10px 16px;
                 ">
                   <div style="
                     font-size:10px; color:#003366; font-weight:700;
                     text-transform:uppercase; letter-spacing:1.5px;
-                    margin-bottom:10px;
-                    padding-bottom:6px;
+                    margin-bottom:6px;
+                    padding-bottom:4px;
                     border-bottom:2px solid #B8860B;
                     display:inline-block;
                   ">▎ Bill From (Seller)</div>
-                  <div style="font-size:15px; font-weight:700; color:#1a1a1a; margin-top:4px;">
+                  <div style="font-size:14px; font-weight:700; color:#1a1a1a; margin-top:2px;">
                     Rakhi Panchal
                   </div>
-                  <div style="font-size:13px; color:#555; line-height:1.7; margin-top:4px;">
+                  <div style="font-size:12px; color:#555; line-height:1.5; margin-top:2px;">
                     Satyagrah Chhavni,<br>
                     Satellite, Ahmedabad — 380015<br>
                     Gujarat, India
                   </div>
-                  <div style="margin-top:10px; font-size:12px; color:#333;">
+                  <div style="margin-top:6px; font-size:11px; color:#333;">
                     <span style="color:#888; font-weight:600;">Ph:</span> 9898894005
                   </div>
-                  <div style="display:flex; gap:10px; margin-top:12px;">
+                  <div style="display:flex; gap:8px; margin-top:8px;">
                     <div style="
                       flex:1;
-                      padding:10px 14px;
+                      padding:6px 10px;
                       background:#fff; border:1px dashed #c0c0c0;
-                      border-radius:4px; font-size:12px; color:#333;
-                      line-height:1.7;
+                      border-radius:4px; font-size:11px; color:#333;
+                      line-height:1.5;
                     ">
                       <div style="font-size:10px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">
                         Bank Details
@@ -657,7 +657,7 @@
                     </div>
                     <div id="qrCodeContainer" style="
                       display:flex; flex-direction:column; align-items:center;
-                      padding:8px; background:#fff; border:1px dashed #c0c0c0;
+                      padding:5px; background:#fff; border:1px dashed #c0c0c0;
                       border-radius:4px;
                     ">
                       <div style="font-size:9px; color:#888; font-weight:600; text-transform:uppercase; margin-bottom:4px;">Scan to Pay</div>
@@ -672,29 +672,29 @@
                   background: #fffdf5;
                   border: 1px solid #d0d5dd;
                   border-radius: 0 6px 6px 0;
-                  padding: 18px 22px;
+                  padding: 10px 16px;
                 ">
                   <div style="
                     font-size:10px; color:#003366; font-weight:700;
                     text-transform:uppercase; letter-spacing:1.5px;
-                    margin-bottom:10px;
-                    padding-bottom:6px;
+                    margin-bottom:6px;
+                    padding-bottom:4px;
                     border-bottom:2px solid #B8860B;
                     display:inline-block;
                   ">▎ Bill To (Buyer)</div>
-                  <div id="billToPreview" style="font-size:14px; color:#333; line-height:1.7; margin-top:4px;">
+                  <div id="billToPreview" style="font-size:13px; color:#333; line-height:1.5; margin-top:2px;">
                     <span style="color:#aaa; font-style:italic;">— Not specified —</span>
                   </div>
                 </div>
               </div>
 
               <!-- ===== ITEMS TABLE ===== -->
-              <div style="margin-bottom:20px;">
+              <div style="margin-bottom:12px;">
                 <div style="
                   font-size:10px; color:#003366; font-weight:700;
                   text-transform:uppercase; letter-spacing:1.5px;
-                  margin-bottom:10px;
-                  padding-bottom:6px;
+                  margin-bottom:6px;
+                  padding-bottom:4px;
                   border-bottom:2px solid #B8860B;
                   display:inline-block;
                 ">▎ Particulars of Goods / Services</div>
@@ -712,35 +712,35 @@
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:10px 14px; text-align:center;
+                        padding:7px 10px; text-align:center;
                         border:1px solid #002244; width:44px;
                       ">S.No</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:10px 14px; text-align:left;
+                        padding:7px 10px; text-align:left;
                         border:1px solid #002244;
                       ">Item / Service Description</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:10px 14px; text-align:right;
+                        padding:7px 10px; text-align:right;
                         border:1px solid #002244; width:100px;
                       ">Rate (₹)</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:10px 14px; text-align:center;
+                        padding:7px 10px; text-align:center;
                         border:1px solid #002244; width:60px;
                       ">Qty</th>
                       <th style="
                         background: linear-gradient(180deg, #003366, #004080);
                         color:#fff; font-size:10px; font-weight:700;
                         text-transform:uppercase; letter-spacing:1px;
-                        padding:10px 14px; text-align:right;
+                        padding:7px 10px; text-align:right;
                         border:1px solid #002244; width:110px;
                       ">Amount (₹)</th>
                     </tr>
@@ -752,17 +752,17 @@
                     <!-- Subtotal Row -->
                     <tr>
                       <td colspan="4" style="
-                        text-align:right; padding:10px 14px;
+                        text-align:right; padding:6px 10px;
                         font-weight:600; color:#555;
-                        font-size:12px; text-transform:uppercase;
+                        font-size:11px; text-transform:uppercase;
                         letter-spacing:0.5px;
                         border:1px solid #c0c0c0;
                         background:#fafaf5;
                       ">Subtotal</td>
                       <td id="invoiceSubtotalPreview" style="
-                        text-align:right; padding:10px 14px;
+                        text-align:right; padding:6px 10px;
                         font-weight:700; color:#333;
-                        font-family:monospace; font-size:13px;
+                        font-family:monospace; font-size:12px;
                         border:1px solid #c0c0c0;
                         background:#fafaf5;
                       ">₹ 0.00</td>
@@ -770,17 +770,17 @@
                     <!-- Delivery Row (hidden by default) -->
                     <tr id="deliveryRow" style="display:none;">
                       <td colspan="4" style="
-                        text-align:right; padding:10px 14px;
+                        text-align:right; padding:6px 10px;
                         font-weight:600; color:#555;
-                        font-size:12px; text-transform:uppercase;
+                        font-size:11px; text-transform:uppercase;
                         letter-spacing:0.5px;
                         border:1px solid #c0c0c0;
                         background:#fafaf5;
                       ">Delivery / Shipping Charges</td>
                       <td id="deliveryPreview" style="
-                        text-align:right; padding:10px 14px;
+                        text-align:right; padding:6px 10px;
                         font-weight:700; color:#333;
-                        font-family:monospace; font-size:13px;
+                        font-family:monospace; font-size:12px;
                         border:1px solid #c0c0c0;
                         background:#fafaf5;
                       ">₹ 0.00</td>
@@ -788,17 +788,17 @@
                     <!-- Grand Total Row -->
                     <tr>
                       <td colspan="4" style="
-                        text-align:right; padding:12px 14px;
+                        text-align:right; padding:8px 10px;
                         font-weight:800; color:#003366;
-                        font-size:14px; text-transform:uppercase;
+                        font-size:13px; text-transform:uppercase;
                         letter-spacing:1px;
                         border:2px solid #003366;
                         background:#e8edf5;
                       ">Grand Total</td>
                       <td id="invoiceGrandTotal" style="
-                        text-align:right; padding:12px 14px;
+                        text-align:right; padding:8px 10px;
                         font-weight:900; color:#003366;
-                        font-family:monospace; font-size:16px;
+                        font-family:monospace; font-size:15px;
                         border:2px solid #003366;
                         background:#e8edf5;
                       ">₹ 0.00</td>
@@ -812,8 +812,8 @@
                 background:#f0f4f8;
                 border:1px solid #c0c8d8;
                 border-radius:4px;
-                padding:12px 18px;
-                margin-bottom:24px;
+                padding:8px 14px;
+                margin-bottom:12px;
                 display:flex; align-items:center; gap:10px;
               ">
                 <div style="font-size:10px; color:#003366; font-weight:700; text-transform:uppercase; letter-spacing:1px; white-space:nowrap;">
@@ -833,14 +833,14 @@
                   border:1px solid #d0d5dd;
                   border-right:none;
                   border-radius:6px 0 0 6px;
-                  padding:16px 20px;
+                  padding:10px 14px;
                   background:#fafaf8;
                 ">
                   <div style="
                     font-size:10px; color:#003366; font-weight:700;
                     text-transform:uppercase; letter-spacing:1px;
-                    margin-bottom:8px;
-                    padding-bottom:4px;
+                    margin-bottom:5px;
+                    padding-bottom:3px;
                     border-bottom:1px solid #ddd;
                   ">Terms & Conditions</div>
                   <ol style="
@@ -885,10 +885,10 @@
 
             <!-- ===== FOOTER BAR ===== -->
             <div style="
-              margin-top:20px;
+              margin-top:10px;
               background:#f0f0ea;
               border-top:1px solid #d0d0c8;
-              padding:10px 40px;
+              padding:7px 40px;
               text-align:center;
             ">
               <div style="font-size:10px; color:#888; letter-spacing:0.3px;">
@@ -1194,11 +1194,11 @@
         var bgColor = (idx % 2 === 0) ? '#ffffff' : '#f8f8f5';
         var tr2 = document.createElement('tr');
         tr2.innerHTML =
-          '<td style="padding:10px 14px;font-size:12px;color:#555;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:600;">' + (idx + 1) + '</td>' +
-          '<td style="padding:10px 14px;font-size:13px;color:#222;text-align:left;border:1px solid #c0c0c0;background:' + bgColor + ';font-weight:500;">' + escapeHtml(it.desc) + '</td>' +
-          '<td style="padding:10px 14px;font-size:13px;color:#333;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;">' + it.price.toFixed(2) + '</td>' +
-          '<td style="padding:10px 14px;font-size:13px;color:#333;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';">' + it.qty + '</td>' +
-          '<td style="padding:10px 14px;font-size:13px;color:#1a1a1a;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:700;">' + it.total.toFixed(2) + '</td>';
+          '<td style="padding:6px 10px;font-size:12px;color:#555;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:600;">' + (idx + 1) + '</td>' +
+          '<td style="padding:6px 10px;font-size:12px;color:#222;text-align:left;border:1px solid #c0c0c0;background:' + bgColor + ';font-weight:500;">' + escapeHtml(it.desc) + '</td>' +
+          '<td style="padding:6px 10px;font-size:12px;color:#333;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;">' + it.price.toFixed(2) + '</td>' +
+          '<td style="padding:6px 10px;font-size:12px;color:#333;text-align:center;border:1px solid #c0c0c0;background:' + bgColor + ';">' + it.qty + '</td>' +
+          '<td style="padding:6px 10px;font-size:12px;color:#1a1a1a;text-align:right;border:1px solid #c0c0c0;background:' + bgColor + ';font-family:monospace;font-weight:700;">' + it.total.toFixed(2) + '</td>';
         invoiceItemsPrev.appendChild(tr2);
       });
 
@@ -1265,8 +1265,11 @@
     invDateInput.addEventListener('change', function () {
       invDatePreview.textContent = invDateInput.value || '-';
     });
-    invNumberInput.addEventListener('input', function () {
-      invNumberPreview.textContent = invNumberInput.value.trim() || '-';
+    function formatInvNumber(val) {
+      return val ? val.replace('-', '/') : '-';
+    }
+    invNumberInput.addEventListener('change', function () {
+      invNumberPreview.textContent = formatInvNumber(invNumberInput.value);
     });
     deliveryInput.addEventListener('input', renderItems);
 
@@ -1302,7 +1305,7 @@
         invDateInput.focus();
         return showStatus('Validation Error: Invoice Date is mandatory.', 'error');
       }
-      if (!invNumberInput.value.trim()) {
+      if (!invNumberInput.value) {
         invNumberInput.focus();
         return showStatus('Validation Error: Invoice Number is mandatory.', 'error');
       }
@@ -1320,7 +1323,7 @@
 
       // Sync preview
       invDatePreview.textContent   = invDateInput.value || '-';
-      invNumberPreview.textContent = invNumberInput.value.trim() || '-';
+      invNumberPreview.textContent = formatInvNumber(invNumberInput.value);
       updateBillToPreview();
       renderItems();
 
@@ -1329,7 +1332,9 @@
       generateBtnText.innerHTML = '<span class="spinner"></span> Processing…';
 
       var invoiceEl = document.getElementById('invoice-preview');
-      var fileName  = (invNumberInput.value.trim() || 'invoice') + '.pdf';
+      var invNumFormatted = formatInvNumber(invNumberInput.value);
+      if (invNumFormatted === '-') invNumFormatted = 'invoice';
+      var fileName  = invNumFormatted + '.pdf';
 
       // Wait for DOM to repaint
       requestAnimationFrame(function () {
@@ -1409,7 +1414,7 @@
 
           showStatus(
             '\u2713 PDF Document generated successfully! Invoice #: ' +
-            (invNumberInput.value.trim() || 'N/A') +
+            (formatInvNumber(invNumberInput.value) || 'N/A') +
             ' — File: ' + fileName,
             'success'
           );
